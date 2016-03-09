@@ -1,6 +1,14 @@
 [package]
-name = "rev"
+name = "reversi"
 version = "0.1.0"
 authors = ["user"]
 
 [dependencies]
+
+[[bin]]
+name = "stat"
+path = "src/stat.rs"
+
+[[bin]]
+name = "main"
+path = "src/main.rs"
