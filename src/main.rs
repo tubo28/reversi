@@ -1,7 +1,7 @@
 mod reversi;
 
 use reversi::*;
-use std::io::{Write,stdout};
+use std::io::{stdout, Write};
 
 fn main() {
     println!("Choose players.");
