@@ -205,7 +205,7 @@ impl Board {
         }
 
         #[inline]
-        fn get_rev(board: &Board, m: Mask, valid: Mask, transfer: &Fn(Mask) -> Mask) -> Mask {
+        fn get_rev(board: &Board, m: Mask, valid: Mask, transfer: &dyn Fn(Mask) -> Mask) -> Mask {
             let Board(black, white) = *board;
             if (valid & m) == m {
                 let mut rev = 0;
@@ -482,6 +482,7 @@ impl Player for RandomPlayer {
 pub struct HumanPlayer;
 
 impl HumanPlayer {
+    #[allow(dead_code)]
     pub fn new() -> HumanPlayer {
         HumanPlayer
     }
@@ -568,8 +569,8 @@ pub struct GameResult {
 }
 
 pub struct GameManager {
-    black: Box<Player>,
-    white: Box<Player>,
+    black: Box<dyn Player>,
+    white: Box<dyn Player>,
     board: Board,
     next_player: Turn,
     pub result: Option<GameResult>,
@@ -577,7 +578,7 @@ pub struct GameManager {
 }
 
 impl GameManager {
-    pub fn new(black: Box<Player>, white: Box<Player>) -> GameManager {
+    pub fn new(black: Box<dyn Player>, white: Box<dyn Player>) -> GameManager {
         GameManager {
             black: black,
             white: white,
