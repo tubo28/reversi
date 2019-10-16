@@ -6,9 +6,5 @@ authors = ["user"]
 [dependencies]
 
 [[bin]]
-name = "stat"
-path = "src/stat.rs"
-
-[[bin]]
 name = "main"
 path = "src/main.rs"
