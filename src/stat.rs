@@ -23,7 +23,7 @@ fn main() {
             if let Some(seed) = seed {
                 let random = Box::new(RandomPlayer::new(seed));
                 let alpha_beta = Box::new(AlphaBetaSearchPlayer::new(seed));
-                let (black, white): (Box<Player>, Box<Player>) = if seed < num_games / 2 {
+                let (black, white): (Box<dyn Player>, Box<dyn Player>) = if seed < num_games / 2 {
                     (alpha_beta, random)
                 } else {
                     (random, alpha_beta)
