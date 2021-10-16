@@ -95,29 +95,16 @@ impl GameManager {
             } else {
                 println!("Second ({}) wins!", self.white.name());
             }
-            println!(
-                "First ({}): {}, Second ({}): {}",
-                b,
-                self.black.name(),
-                w,
-                self.white.name()
-            );
+            println!("First ({}): {}, Second ({}): {}", b, self.black.name(), w, self.white.name());
         }
     }
 
     fn finalize(&mut self) {
         assert!(self.result.is_none());
         let (black, white) = self.board.count();
-        let winner = if black > white {
-            Turn::Black
-        } else {
-            Turn::White
-        };
-        self.result = Some(GameResult {
-            winner: winner,
-            board: self.board.clone(),
-            disks: (black, white),
-        });
+        let winner = if black > white { Turn::Black } else { Turn::White };
+        self.result =
+            Some(GameResult { winner: winner, board: self.board.clone(), disks: (black, white) });
     }
 
     fn next(&mut self) -> Option<Mask> {

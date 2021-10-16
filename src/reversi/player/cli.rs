@@ -50,10 +50,7 @@ impl Player for HumanPlayer {
                 for (k, &(r, c)) in map.iter() {
                     println!("  {} : {}", k, position_to_name(r, c));
                 }
-                print!(
-                    "Type any character of [{}]: ",
-                    cand.iter().collect::<String>()
-                );
+                print!("Type any character of [{}]: ", cand.iter().collect::<String>());
                 stdout().flush().unwrap();
                 c = util::read_one_char();
             }

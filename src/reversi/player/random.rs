@@ -10,9 +10,7 @@ pub struct RandomPlayer {
 
 impl RandomPlayer {
     pub fn new(seed: u32) -> RandomPlayer {
-        RandomPlayer {
-            rand: rand::Xor128::from_seed(seed),
-        }
+        RandomPlayer { rand: rand::Xor128::from_seed(seed) }
     }
 }
 
