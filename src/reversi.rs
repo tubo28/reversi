@@ -276,12 +276,18 @@ impl Board {
 /// 反時計回りに90度回転します．
 #[inline]
 fn rotate_mask(x: Mask) -> Mask {
-    let x = ((x << 1) & 0xAA00AA00AA00AA00) | ((x >> 1) & 0x0055005500550055)
-        | ((x >> 8) & 0x00AA00AA00AA00AA) | ((x << 8) & 0x5500550055005500);
-    let x = ((x << 2) & 0xCCCC0000CCCC0000) | ((x >> 2) & 0x0000333300003333)
-        | ((x >> 16) & 0x0000CCCC0000CCCC) | ((x << 16) & 0x3333000033330000);
-    let x = ((x << 4) & 0xF0F0F0F000000000) | ((x >> 4) & 0x000000000F0F0F0F)
-        | ((x >> 32) & 0x00000000F0F0F0F0) | ((x << 32) & 0x0F0F0F0F00000000);
+    let x = ((x << 1) & 0xAA00AA00AA00AA00)
+        | ((x >> 1) & 0x0055005500550055)
+        | ((x >> 8) & 0x00AA00AA00AA00AA)
+        | ((x << 8) & 0x5500550055005500);
+    let x = ((x << 2) & 0xCCCC0000CCCC0000)
+        | ((x >> 2) & 0x0000333300003333)
+        | ((x >> 16) & 0x0000CCCC0000CCCC)
+        | ((x << 16) & 0x3333000033330000);
+    let x = ((x << 4) & 0xF0F0F0F000000000)
+        | ((x >> 4) & 0x000000000F0F0F0F)
+        | ((x >> 32) & 0x00000000F0F0F0F0)
+        | ((x << 32) & 0x0F0F0F0F00000000);
     x
 }
 
@@ -645,7 +651,11 @@ impl GameManager {
                     self.board = self.board.reverse(mov);
                     if self.verbose {
                         let (r, c) = movemask_to_position(mov);
-                        println!("First ({}) chooses {}.", self.black.name(), position_to_name(r, c));
+                        println!(
+                            "First ({}) chooses {}.",
+                            self.black.name(),
+                            position_to_name(r, c)
+                        );
                     }
                 } else {
                     if self.verbose {
@@ -659,7 +669,11 @@ impl GameManager {
                     self.board = moved;
                     if self.verbose {
                         let (r, c) = movemask_to_position(mov);
-                        println!("Second ({}) chooses {}.", self.white.name(), position_to_name(r, c));
+                        println!(
+                            "Second ({}) chooses {}.",
+                            self.white.name(),
+                            position_to_name(r, c)
+                        );
                     }
                 } else {
                     if self.verbose {
@@ -671,13 +685,16 @@ impl GameManager {
         self.next_player = self.next_player.switch();
         if self.verbose {
             let (black, white) = self.board.count();
-            println!("{}", 
-                format!("{:>16} (First) {:>2} X {:<2} (Second) {:<16}",
-                        self.black.name(),
-                        black,
-                        white,
-                        self.white.name()
-                ).trim()
+            println!(
+                "{}",
+                format!(
+                    "{:>16} (First) {:>2} X {:<2} (Second) {:<16}",
+                    self.black.name(),
+                    black,
+                    white,
+                    self.white.name()
+                )
+                .trim()
             );
         }
     }
