@@ -10,9 +10,7 @@ pub struct AlphaBetaSearchPlayer {
 
 impl AlphaBetaSearchPlayer {
     pub fn new(seed: u32) -> AlphaBetaSearchPlayer {
-        AlphaBetaSearchPlayer {
-            rand: rand::Xor128::from_seed(seed),
-        }
+        AlphaBetaSearchPlayer { rand: rand::Xor128::from_seed(seed) }
     }
 
     fn search(&mut self, board: &Board, alpha: i32, beta: i32, depth: usize, passed: bool) -> i32 {

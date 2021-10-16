@@ -8,12 +8,7 @@ pub struct Xor128 {
 
 impl Xor128 {
     pub fn from_seed(seed: u32) -> Xor128 {
-        let mut res = Xor128 {
-            x: 123456789,
-            y: 987654321,
-            z: 1000000007,
-            w: seed,
-        };
+        let mut res = Xor128 { x: 123456789, y: 987654321, z: 1000000007, w: seed };
         for _ in 0..16 {
             res.next();
         }
