@@ -1,4 +1,4 @@
-/// Xor-shift 乱数生成アルゴリズムにより乱数を生成します．
+/// Stateful random number generator by XorShift algorithm.
 pub struct Xor128 {
     x: u32,
     y: u32,
@@ -15,7 +15,7 @@ impl Xor128 {
         res
     }
 
-    /// 内部状態を 1 ステップ進め，乱数を返します．
+    /// Proceed the state by one step and returns a random number less than 2^31-1.
     pub fn next(&mut self) -> u32 {
         let t = self.x ^ (self.x << 11);
         self.x = self.y;

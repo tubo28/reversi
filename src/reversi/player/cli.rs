@@ -3,7 +3,8 @@ use reversi::bitboard::*;
 use reversi::player::*;
 use std::collections::BTreeMap;
 
-/// 人間がキーボードから手を入力するのを補助します．
+/// Player by human's input.
+/// Helps inputs in CLI.
 pub struct HumanPlayer;
 
 impl HumanPlayer {

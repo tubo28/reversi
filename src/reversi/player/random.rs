@@ -3,7 +3,7 @@ use reversi::bitboard::*;
 use reversi::player::*;
 use reversi::{H, W};
 
-/// ランダムな行動をするプレイヤーです．
+/// Player who always does random moves.
 pub struct RandomPlayer {
     rand: rand::Xor128,
 }

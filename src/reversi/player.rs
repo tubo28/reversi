@@ -1,11 +1,8 @@
-//! リバーシのプレイヤープログラム (AI) です．
-//! 簡単な評価関数を用いた alpha-beta 探索アルゴリズムを実装しています．
-
 pub mod alphabeta;
 pub mod cli;
 pub mod random;
 
-use reversi::bitboard::*; // fixme: should not depend on bitboard
+use reversi::bitboard;
 use reversi::rand;
 use reversi::util;
 use reversi::{H, W};
@@ -13,23 +10,24 @@ use reversi::{H, W};
 use std::cmp::max;
 use std::io::{stdout, Write};
 
-/// 十分に大きな値を表す定数です．
-const INF: i32 = 100_000_000;
-
+/// Names positions like A1, A2, ..., B1, B2, ...
+/// Columns A through Z by left to right, and rows 1 to 8 by top to bottom.
 fn position_to_name(r: usize, c: usize) -> String {
     let col_name: Vec<_> = "ABCDEFGH".chars().collect();
     let row_name: Vec<_> = "12345678".chars().collect();
     format!("{}{}", col_name[c], row_name[r])
 }
 
-const SEARCH_DEPTH: usize = 7;
-
+/// Trait for reversi player.
+/// It can decide the next move and say their name.
 pub trait Player {
-    fn next(&mut self, board: &Board) -> Option<Mask>;
+    // Select a move by given board.
+    // None is pass (allowed only if there is no valid moves).
+    fn next(&mut self, board: &bitboard::Board) -> Option<bitboard::Mask>;
     fn name(&self) -> &'static str;
 }
 
-/// 手番を表します．
+/// Player who will take the next move.
 #[derive(Clone)]
 pub enum Turn {
     Black,
@@ -37,7 +35,6 @@ pub enum Turn {
 }
 
 impl Turn {
-    /// 自身が黒番なら白番を，白番なら黒番を返します．
     fn switch(&self) -> Turn {
         match self {
             &Turn::Black => Turn::White,
@@ -46,36 +43,51 @@ impl Turn {
     }
 }
 
-/// ゲームの結果を表す型です．
-/// TODO: 手順を追加
+/// The result of a game
+/// TODO: Add sequence of moves.
 #[derive(Clone)]
 pub struct GameResult {
     pub winner: Turn,
-    pub board: Board,
+
+    // Which player will move it next
+    pub board: bitboard::Board,
+
+    // Numbers of disks
     pub disks: (u32, u32),
 }
 
 pub struct GameManager {
     black: Box<dyn Player>,
     white: Box<dyn Player>,
-    board: Board,
+
+    // Current state of board
+    board: bitboard::Board,
+
+    // Which player can put a disk in current state
     next_player: Turn,
+
+    // Result of the game.
+    // None if the game is not finished, Some for otherwise.
     pub result: Option<GameResult>,
+
+    // Print verbose output of game state while the game goes on.
     pub verbose: bool,
 }
 
 impl GameManager {
     pub fn new(black: Box<dyn Player>, white: Box<dyn Player>) -> GameManager {
         GameManager {
-            black: black,
-            white: white,
-            board: Board::new(),
+            black,
+            white,
+            // Black is first to move.
+            board: bitboard::Board::new(),
             next_player: Turn::Black,
             result: None,
             verbose: true,
         }
     }
 
+    // Start the game and continue until it is over.
     pub fn playout(&mut self) {
         while self.board.continues() {
             if self.verbose {
@@ -99,6 +111,7 @@ impl GameManager {
         }
     }
 
+    // Fill result field.
     fn finalize(&mut self) {
         assert!(self.result.is_none());
         let (black, white) = self.board.count();
@@ -107,11 +120,14 @@ impl GameManager {
             Some(GameResult { winner: winner, board: self.board.clone(), disks: (black, white) });
     }
 
-    fn next(&mut self) -> Option<Mask> {
+    // Let next player choose the move.
+    // Returns None only if there is no choice but to pass.
+    fn next(&mut self) -> Option<bitboard::Mask> {
         let res = match self.next_player {
             Turn::Black => self.black.next(&self.board),
             Turn::White => self.white.next(&self.board.switch()),
         };
+        // TODO: If None, we should check that is ok.
         if let Some(mov) = res {
             debug_assert!(mov.count_ones() == 1);
         };
@@ -119,13 +135,14 @@ impl GameManager {
         res
     }
 
-    fn apply(&mut self, mov: Option<Mask>) {
+    // Apply a move and update self.
+    fn apply(&mut self, mov: Option<bitboard::Mask>) {
         match self.next_player {
             Turn::Black => {
                 if let Some(mov) = mov {
-                    self.board = self.board.reverse(mov);
+                    self.board = self.board.flip(mov);
                     if self.verbose {
-                        let (r, c) = movemask_to_position(mov);
+                        let (r, c) = bitboard::coordinate(mov);
                         println!(
                             "First ({}) chooses {}.",
                             self.black.name(),
@@ -140,10 +157,10 @@ impl GameManager {
             }
             Turn::White => {
                 if let Some(mov) = mov {
-                    let moved = self.board.switch().reverse(mov).switch();
+                    let moved = self.board.switch().flip(mov).switch();
                     self.board = moved;
                     if self.verbose {
-                        let (r, c) = movemask_to_position(mov);
+                        let (r, c) = bitboard::coordinate(mov);
                         println!(
                             "Second ({}) chooses {}.",
                             self.white.name(),
@@ -173,19 +190,11 @@ impl GameManager {
             );
         }
     }
-
-    // fn get_move(player: &mut Player, board: &Board) -> Option<Mask> {
-    //     match *player {
-    //         Player::Random(ref mut p) => p.next(&board),
-    //         Player::AlphaBeta(ref mut p) => p.next(&board),
-    //         Player::Human(ref mut p) => p.next(&board),
-    //     }
-    // }
 }
 
 // todo: move to cli
 /// 標準出力に出力します．
-fn print(board: &Board) {
+fn print(board: &bitboard::Board) {
     let (valid, _) = board.get_valid_mask();
     let mut g = empty_grid();
     write_mask_to(&mut g, board.0, 'X');
@@ -197,11 +206,11 @@ fn print(board: &Board) {
 }
 
 // todo: remove dups
-fn write_mask_to(g: &mut Vec<Vec<char>>, mask: Mask, c: char) {
+fn write_mask_to(g: &mut Vec<Vec<char>>, mask: bitboard::Mask, c: char) {
     for i in 0..H * 2 + 1 {
         for j in 0..W * 2 + 1 {
             if i % 2 == 1 && j % 2 == 1 {
-                if get(mask, i / 2, j / 2) {
+                if bitboard::get(mask, i / 2, j / 2) {
                     debug_assert_eq!(g[i][j], ' ');
                     g[i][j] = c;
                 }
