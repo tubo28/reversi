@@ -1,7 +1,7 @@
+use reversi::asciiboard;
 use reversi::bitboard;
 use reversi::player::Player;
 use reversi::util;
-use reversi::asciiboard;
 
 /// Player who will take the next move.
 #[derive(Clone)]
@@ -79,11 +79,11 @@ impl GameManager {
             asciiboard::print(&result.board);
             let (b, w) = result.disks;
             if b > w {
-                println!("First ({}) wins!", self.black.name());
+                println!("first ({}) wins!", self.black.name());
             } else {
-                println!("Second ({}) wins!", self.white.name());
+                println!("second ({}) wins!", self.white.name());
             }
-            println!("First ({}): {}, Second ({}): {}", b, self.black.name(), w, self.white.name());
+            println!("first ({}): {}, second ({}): {}", b, self.black.name(), w, self.white.name());
         }
     }
 
@@ -120,14 +120,14 @@ impl GameManager {
                     if self.verbose {
                         let (r, c) = bitboard::coordinate(mov);
                         println!(
-                            "First ({}) chooses {}.",
+                            "first ({}) chooses {}.",
                             self.black.name(),
                             util::position_to_name(r, c)
                         );
                     }
                 } else {
                     if self.verbose {
-                        println!("First ({}) passed.", self.black.name());
+                        println!("first ({}) passed.", self.black.name());
                     }
                 }
             }
@@ -138,14 +138,14 @@ impl GameManager {
                     if self.verbose {
                         let (r, c) = bitboard::coordinate(mov);
                         println!(
-                            "Second ({}) chooses {}.",
+                            "second ({}) chooses {}.",
                             self.white.name(),
                             util::position_to_name(r, c)
                         );
                     }
                 } else {
                     if self.verbose {
-                        println!("Second ({}) passed.", self.white.name());
+                        println!("second ({}) passed.", self.white.name());
                     }
                 }
             }
@@ -156,7 +156,7 @@ impl GameManager {
             println!(
                 "{}",
                 format!(
-                    "{:>16} (First) {:>2} X {:<2} (Second) {:<16}",
+                    "{:>16} {:>2} X {:<2} {:<16}",
                     self.black.name(),
                     black,
                     white,

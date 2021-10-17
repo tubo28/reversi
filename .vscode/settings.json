@@ -4,6 +4,7 @@
         "asciiboard",
         "bitboard",
         "Bitmask",
+        "playout",
         "reversi"
     ]
 }

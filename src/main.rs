@@ -9,28 +9,26 @@ use reversi::util;
 use std::io::{stdout, Write};
 
 fn main() {
-    println!("Choose players.");
-    println!("1 => human (from keyboard)");
-    println!("2 => AI (alpha-beta search)");
-    println!("3 => random");
+    println!("choose players.");
+    println!("  a : AI (alpha-beta search, default)");
+    println!("  b : random");
+    println!("  c : human (from keyboard)");
 
-    print!("First player? Type either key in [123] (human by default): ");
-    stdout().flush().unwrap();
-    let black = match util::read_one_char() {
-        Some('1') => Box::new(HumanPlayer::new()) as Box<dyn player::Player>,
-        Some('2') => Box::new(AlphaBetaSearchPlayer::new(28)) as Box<dyn player::Player>,
-        Some('3') => Box::new(RandomPlayer::new(28)) as Box<dyn player::Player>,
-        _ => Box::new(player::cli::HumanPlayer::new()) as Box<dyn player::Player>,
-    };
+    let labels = ["first (black)", "second (white)"];
+    let mut players = Vec::new();
+    for label in labels.iter() {
+        print!("{} player? [A/b/c]: ", label);
+        stdout().flush().unwrap();
+        let player = match util::read_one_char().and_then(|a| a.to_lowercase().next()) {
+            Some('b') => Box::new(RandomPlayer::new(28)) as Box<dyn player::Player>,
+            Some('c') => Box::new(HumanPlayer::new()) as Box<dyn player::Player>,
+            _ => Box::new(AlphaBetaSearchPlayer::new(28)) as Box<dyn player::Player>,
+        };
+        println!("selected {}", player.name());
+        players.push(player);
+    }
 
-    print!("Second player? Type either key in [123] (AI by default): ");
-    stdout().flush().unwrap();
-    let white = match util::read_one_char() {
-        Some('1') => Box::new(HumanPlayer::new()) as Box<dyn player::Player>,
-        Some('2') => Box::new(AlphaBetaSearchPlayer::new(28)) as Box<dyn player::Player>,
-        Some('3') => Box::new(RandomPlayer::new(28)) as Box<dyn player::Player>,
-        _ => Box::new(AlphaBetaSearchPlayer::new(28)) as Box<dyn player::Player>,
-    };
-
+    let black = players.swap_remove(0);
+    let white = players.swap_remove(0);
     gm::GameManager::new(black, white).playout();
 }
