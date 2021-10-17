@@ -3,6 +3,7 @@ mod reversi;
 use player::alphabeta::AlphaBetaSearchPlayer;
 use player::cli::HumanPlayer;
 use player::random::RandomPlayer;
+use reversi::gm;
 use reversi::player;
 use reversi::util;
 use std::io::{stdout, Write};
@@ -31,5 +32,5 @@ fn main() {
         _ => Box::new(AlphaBetaSearchPlayer::new(28)) as Box<dyn player::Player>,
     };
 
-    player::GameManager::new(black, white).playout();
+    gm::GameManager::new(black, white).playout();
 }

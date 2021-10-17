@@ -1,9 +1,10 @@
 pub mod bitboard;
+pub mod gm;
 pub mod player;
 pub mod rand;
 pub mod util;
 
 /// Height of board.
-const H: usize = 8;
+pub const H: usize = 8;
 /// Width of board.
-const W: usize = 8;
+pub const W: usize = 8;
