@@ -1,6 +1,7 @@
 use reversi::{H, W};
 
-// Bitmask of the 8 x 8 board. The cell on i-th row of j-th column is corresponds to the (W*i+j)-th bit.
+// Bitmask of the 8 x 8 board. The cell on (i, j) (i-th row of j-th column)
+// corresponds to the (W*i+j)-th bit.
 pub type Mask = u64;
 
 /// State of the board.

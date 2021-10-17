@@ -1,4 +1,3 @@
-// todo: move thise to reversi
 use reversi::bitboard::*;
 use reversi::player::*;
 use reversi::{H, W};

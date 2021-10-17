@@ -1,7 +1,7 @@
-// todo: move thise to reversi
 use reversi::bitboard::*;
 use reversi::player::*;
 use std::collections::BTreeMap;
+use std::io::*;
 
 /// Player by human's input.
 /// Helps inputs in CLI.
@@ -49,7 +49,7 @@ impl Player for HumanPlayer {
             while c.is_none() || map.get(c.as_ref().unwrap()).is_none() {
                 println!("Possible moves are:");
                 for (k, &(r, c)) in map.iter() {
-                    println!("  {} : {}", k, position_to_name(r, c));
+                    println!("  {} : {}", k, util::position_to_name(r, c));
                 }
                 print!("Type any character of [{}]: ", cand.iter().collect::<String>());
                 stdout().flush().unwrap();
