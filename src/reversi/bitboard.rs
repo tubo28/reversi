@@ -1,67 +1,60 @@
 use reversi::{H, W};
 
-/// 盤面全体のマスクを表す型です．`i` 行 `j` 列目のマスと `W` * `i` + `j` 番目のビットが対応します．
+// Bitmask of the 8 x 8 board. The cell on i-th row of j-th column is corresponds to the (W*i+j)-th bit.
 pub type Mask = u64;
 
-/// 盤面を表す型です．
-///
-/// `self.0` が黒を表します．
-/// `self.0` の `i` 番目のビットが立っているとき，かつそのときに限り，
-/// 黒石が (`i` / `H`, `i` %  `H`) に存在することを表します．
-/// `self.1` も同様に白石を表します．
+/// State of the board.
+/// self.0 represents the places of black disks.
+/// The i-th bit of self.0 is positive (one) iff. cell (i/H, i%H) has a black disk.
+/// The same for self.1 for white.
 #[derive(Clone)]
 pub struct Board(pub Mask, pub Mask); // black, white
 
-/// 石を置くことができる位置を計算するためのヒントを表す型です．
-///
-/// `i` 番目の要素は，
-/// `i` 回 `rotate` を実行したあとの盤面に対して黒を置くことで白が取れる場所を表します．
-///
-/// `i` 番目の要素が `(a, b)` であると仮定します．
-/// `a` においてビットが立っている位置に関して，
-/// その位置のまっすぐ右に黒石が存在し，その間は全て白石が存在します．
-/// また，`b` においてビットが立っている位置に関して，
-/// その位置のまっすぐ右下に黒石が存在し，その間は全て白石が存在します．
+/// ValidMaskParts represents the cells where a disk can be placed one of there.
+/// Consider a bitmask which we apply `rotate` for i times to ValidMaskParts[i].
+/// Then it represents places where we can flip at least one white disk to be black by putting black there.
 type ValidMaskParts = [(Mask, Mask); 4];
 
 impl Board {
+    // Returns the begging of games with four disks.
     pub fn new() -> Board {
         let black = put(put(0, 3, 4), 4, 3);
         let white = put(put(0, 3, 3), 4, 4);
         Board(black, white)
     }
 
-    /// 反時計回りに回転した盤面を返します．
+    /// Returns board rotated ccw.
     fn rotate(&self) -> Board {
         Board(rotate_mask(self.0), rotate_mask(self.1))
     }
 
-    /// 黒番と白番を入れ替えた盤面を返します．
+    /// Returns board with black and white swapped.
     pub fn switch(&self) -> Board {
         Board(self.1, self.0)
     }
 
-    /// 黒石の数と白石の数を返します．
+    /// Returns the number of disks of black and white.
     #[inline]
     pub fn count(&self) -> (u32, u32) {
+        // usize?
         let Board(black, white) = *self;
         (black.count_ones(), white.count_ones())
     }
 
-    /// どちらかの手番が石を置くことができるなら `true`，終了盤面であれば `false` を返します．
+    /// Returns true iff. either players can place a piece.
+    /// False means the end of this game.
     pub fn continues(&self) -> bool {
         let (a, _) = self.get_valid_mask();
         let (b, _) = self.switch().get_valid_mask();
         a != 0 || b != 0
     }
 
-    /// 黒石を置くことができる位置を調べます．
-    ///
-    /// 戻り値の `Mask` は置くことができる位置を表すビットマスクです．
+    /// Calculates cells in which we can put a black disk.
     #[inline]
     pub fn get_valid_mask(&self) -> (Mask, ValidMaskParts) {
+        // Return the places that can flip white disks alining straight from right to left.
         #[inline]
-        fn valid_mask_from_left(board: &Board) -> Mask {
+        fn valid_mask_left(board: &Board) -> Mask {
             let Board(black, white) = *board;
             let w = white & 0x7e7e7e7e7e7e7e7e;
             let t = w & (black >> 1);
@@ -74,8 +67,9 @@ impl Board {
             blank & (t >> 1)
         }
 
+        // Return the places that can flip white disks alining straight from bottom-right to top-left.
         #[inline]
-        fn valid_mask_from_top_left(board: &Board) -> Mask {
+        fn valid_mask_top_left(board: &Board) -> Mask {
             let Board(black, white) = *board;
             let w = white & 0x007e7e7e7e7e7e00;
             let t = w & (black >> 9);
@@ -88,12 +82,15 @@ impl Board {
             return blank & (t >> 9);
         }
 
+        // Calculate the mask for valid cells of left direction or top-left direction four times
+        // with rotating the board and taking bitwise-or.
+        // It also returns partial (rotated) masks of each step to be used in the next step.
         let mut acc = 0;
         let mut res = [(0, 0); 4];
         let mut rotated_board = self.clone();
         for r in res.iter_mut() {
-            let left = valid_mask_from_left(&rotated_board);
-            let top_left = valid_mask_from_top_left(&rotated_board);
+            let left = valid_mask_left(&rotated_board);
+            let top_left = valid_mask_top_left(&rotated_board);
             *r = (left, top_left);
             acc |= left | top_left;
             rotated_board = rotated_board.rotate();
@@ -102,49 +99,69 @@ impl Board {
         (acc, res)
     }
 
-    /// `mov` が表す位置に黒をおいたときに裏返る白石のビットマスクを返します．
-    /// `mov` の立っている 1 の数はちょうど 1 でなければいけません．
-    fn get_reverse_mask(&self, parts: &ValidMaskParts, mov: Mask) -> Mask {
+    /// Returns the mask of white disks that will be flipped
+    /// when we put a black disk at the `mov`.
+    /// `mov` must have just one positive bit.
+    fn get_flip_mask(&self, parts: &ValidMaskParts, mov: Mask) -> Mask {
         debug_assert!((self.0 | self.1) & mov == 0);
         debug_assert_eq!(mov.count_ones(), 1);
 
+        // Moves all disks to left direction.
         #[inline]
         fn transfer_to_left(m: Mask) -> Mask {
             (m << 1) & 0xfefefefefefefefe
         }
 
+        // Moves all disks to top-left direction.
         #[inline]
         fn transfer_to_top_left(m: Mask) -> Mask {
             (m << 9) & 0xfefefefefefefe00
         }
 
+        // Returns flipped white disks aligning by direction of `transfer` when a disk is put on `mov`.
+        // `mov` must have just one positive bit.
+        // `mov` is allowed to be invalid (impossible to flip any disks)
+        // since this function is called for all of four rotations.
         #[inline]
-        fn get_rev(board: &Board, m: Mask, valid: Mask, transfer: &dyn Fn(Mask) -> Mask) -> Mask {
+        fn get_flip_mask(
+            board: &Board,
+            mov: Mask,
+            valid: Mask,
+            transfer: &dyn Fn(Mask) -> Mask,
+        ) -> Mask {
             let Board(black, white) = *board;
-            if (valid & m) == m {
+            if (valid & mov) == mov {
+                // mov is a subset of valid, so Will flip some disks
+                // Shift mov disk by one cell.
+                let mut mov = transfer(mov);
+                // Walk through white disks until mov hits to the opposite.
                 let mut rev = 0;
-                let mut mask = transfer(m);
-                while mask != 0 && (mask & white) != 0 {
-                    rev |= mask;
-                    mask = transfer(mask);
+                while mov != 0 && (mov & white) != 0 {
+                    rev |= mov;
+                    mov = transfer(mov);
                 }
-                if (mask & black) == 0 {
+                if (mov & black) == 0 {
+                    // The disk of other side not found, cannot flip any white.
                     0
                 } else {
+                    // Reached to black disk put at this turn.
                     rev
                 }
             } else {
+                // Cannot flip any disks
                 0
             }
         }
 
+        // Calculate the mask for flipped cells of left direction and top-left direction four times
+        // with rotating the board and taking bitwise-or.
+        // It also returns partial (rotated) masks of each step to be used in the next step.
         let mut res = 0;
         let mut rotated_board = self.clone();
         let mut mov = mov;
-
         for &(valid_left, valid_top_left) in parts.iter() {
-            res |= get_rev(&rotated_board, mov, valid_left, &transfer_to_left)
-                | get_rev(&rotated_board, mov, valid_top_left, &transfer_to_top_left);
+            res |= get_flip_mask(&rotated_board, mov, valid_left, &transfer_to_left)
+                | get_flip_mask(&rotated_board, mov, valid_top_left, &transfer_to_top_left);
             res = rotate_mask(res);
             rotated_board = rotated_board.rotate();
             mov = rotate_mask(mov);
@@ -154,28 +171,23 @@ impl Board {
         res
     }
 
-    /// `mov` が表す位置に黒石を置いて裏返した後の盤面を返します．
+    /// Returns the mask after we put a black disk at `mov` then some white disks are flipped.
     #[inline]
-    pub fn reverse(&self, mov: Mask) -> Board {
-        let (_, parts) = self.get_valid_mask();
-        self.reverse_with_parts(mov, &parts)
+    pub fn flip(&self, mov: Mask) -> Board {
+        let (_, hints) = self.get_valid_mask();
+        self.flip_with_hints(mov, &hints)
     }
 
-    /// `mov` が表す位置に黒石を置いて裏返した後の盤面を返します．
+    /// Returns the board after we put a black disk at `mov` then flip white disks.
+    /// `hints` are information for working in each direction.
     #[inline]
-    pub fn reverse_with_parts(&self, mov: Mask, parts: &ValidMaskParts) -> Board {
-        let reverse = self.get_reverse_mask(&parts, mov);
-        self.reverse_by_mask(mov, reverse)
-    }
-
-    /// `mov` が表す位置に黒石を置いて裏返した後の盤面を返します．
-    #[inline]
-    fn reverse_by_mask(&self, mov: Mask, rev: Mask) -> Board {
-        Board(self.0 | mov | rev, self.1 ^ rev)
+    pub fn flip_with_hints(&self, mov: Mask, hits: &ValidMaskParts) -> Board {
+        let flip = self.get_flip_mask(&hits, mov);
+        Board(self.0 | mov | flip, self.1 ^ flip)
     }
 }
 
-/// 反時計回りに90度回転します．
+/// Rotate 90 degrees by ccw.
 #[inline]
 pub fn rotate_mask(x: Mask) -> Mask {
     let x = ((x << 1) & 0xAA00AA00AA00AA00)
@@ -193,7 +205,7 @@ pub fn rotate_mask(x: Mask) -> Mask {
     x
 }
 
-/// (`r`, `c`) に対応する位置のビットが立った盤面を返します．
+/// Put disk in the cell at (r, c) cell.
 #[inline]
 pub fn put(mask: Mask, r: usize, c: usize) -> Mask {
     debug_assert!(!get(mask, r, c));
@@ -202,7 +214,7 @@ pub fn put(mask: Mask, r: usize, c: usize) -> Mask {
     mask | (1 << (r * 8 + c))
 }
 
-/// (`r`, `c`) に対応する位置のビットを取得します．
+/// Check if the cell at cell (r, c) has a disk.
 #[inline]
 pub fn get(mask: Mask, r: usize, c: usize) -> bool {
     debug_assert!(r < H);
@@ -210,15 +222,17 @@ pub fn get(mask: Mask, r: usize, c: usize) -> bool {
     mask >> (r * 8 + c) & 1 == 1
 }
 
-/// (`r`, `c`) に対応する位置のビットのみが立った盤面を返します．
+/// Returns the mask that cell in (r, c) only has a disk.
 pub fn position_to_mask(r: usize, c: usize) -> Mask {
     debug_assert!(r < H);
     debug_assert!(c < W);
     put(0, r, c)
 }
 
-/// ちょうど 1 箇所だけ立ったマスクから，その場所の座標を求めます．
-pub fn movemask_to_position(mask: Mask) -> (usize, usize) {
+/// Returns the coordinate of the disk put in mask
+/// which is lexicographically smallest by the coordinate (r, c).
+/// Usually used for find the disk put on a board which has only one disk.
+pub fn coordinate(mask: Mask) -> (usize, usize) {
     let n = mask.trailing_zeros() as usize;
     (n / H, n % H)
 }
