@@ -1,7 +1,7 @@
 use reversi::bitboard;
 use reversi::player::Player;
 use reversi::util;
-use reversi::{H, W};
+use reversi::asciiboard;
 
 /// Player who will take the next move.
 #[derive(Clone)]
@@ -76,7 +76,7 @@ impl GameManager {
         if self.verbose {
             let result = self.result.as_ref().expect("game is not finished");
             println!("Final result:");
-            print(&result.board);
+            asciiboard::print(&result.board);
             let (b, w) = result.disks;
             if b > w {
                 println!("First ({}) wins!", self.black.name());
@@ -166,51 +166,4 @@ impl GameManager {
             );
         }
     }
-}
-
-// todo: move to cli
-/// 標準出力に出力します．
-fn print(board: &bitboard::Board) {
-    let (valid, _) = board.get_valid_mask();
-    let mut g = empty_grid();
-    write_mask_to(&mut g, board.0, 'X');
-    write_mask_to(&mut g, board.1, 'O');
-    write_mask_to(&mut g, valid, '.');
-    for row in g.iter() {
-        println!("{}", row.iter().collect::<String>());
-    }
-}
-
-// todo: remove dups
-fn write_mask_to(g: &mut Vec<Vec<char>>, mask: bitboard::Mask, c: char) {
-    for i in 0..H * 2 + 1 {
-        for j in 0..W * 2 + 1 {
-            if i % 2 == 1 && j % 2 == 1 {
-                if bitboard::get(mask, i / 2, j / 2) {
-                    debug_assert_eq!(g[i][j], ' ');
-                    g[i][j] = c;
-                }
-            }
-        }
-    }
-}
-
-// todo: remove dups
-fn empty_grid() -> Vec<Vec<char>> {
-    let mut g = vec![vec![' '; H * 2 + 1]; W * 2 + 1];
-    for i in 0..H * 2 + 1 {
-        for j in 0..W * 2 + 1 {
-            if i % 2 != 1 || j % 2 != 1 {
-                debug_assert_eq!(g[i][j], ' ');
-                g[i][j] = if i % 2 == 0 && j % 2 == 0 {
-                    '+'
-                } else if i % 2 == 0 {
-                    '-'
-                } else {
-                    '|'
-                };
-            }
-        }
-    }
-    g
 }
