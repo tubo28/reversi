@@ -1,5 +1,6 @@
 use reversi::bitboard::*;
 use reversi::player::*;
+use reversi::asciiboard;
 use std::collections::BTreeMap;
 use std::io::*;
 
@@ -24,9 +25,9 @@ impl Player for HumanPlayer {
         let mut cand = Vec::new();
 
         {
-            let mut g = empty_grid();
-            write_mask_to(&mut g, board.0, 'X');
-            write_mask_to(&mut g, board.1, 'O');
+            let mut g = asciiboard::empty();
+            asciiboard::write_mask(&mut g, board.0, 'X');
+            asciiboard::write_mask(&mut g, board.1, 'O');
             for j in 0..H {
                 for i in 0..H {
                     if get(black_moves, i, j) {
@@ -63,38 +64,4 @@ impl Player for HumanPlayer {
     fn name(&self) -> &'static str {
         "Human"
     }
-}
-
-// todo: remove dups
-fn write_mask_to(g: &mut Vec<Vec<char>>, mask: Mask, c: char) {
-    for i in 0..H * 2 + 1 {
-        for j in 0..W * 2 + 1 {
-            if i % 2 == 1 && j % 2 == 1 {
-                if get(mask, i / 2, j / 2) {
-                    debug_assert_eq!(g[i][j], ' ');
-                    g[i][j] = c;
-                }
-            }
-        }
-    }
-}
-
-// todo: remove dups
-fn empty_grid() -> Vec<Vec<char>> {
-    let mut g = vec![vec![' '; H * 2 + 1]; W * 2 + 1];
-    for i in 0..H * 2 + 1 {
-        for j in 0..W * 2 + 1 {
-            if i % 2 != 1 || j % 2 != 1 {
-                debug_assert_eq!(g[i][j], ' ');
-                g[i][j] = if i % 2 == 0 && j % 2 == 0 {
-                    '+'
-                } else if i % 2 == 0 {
-                    '-'
-                } else {
-                    '|'
-                };
-            }
-        }
-    }
-    g
 }
