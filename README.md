@@ -1,14 +1,16 @@
 # A simple reversi AI written in Rust
 
+## Features
+
 - Alpha-beta search
-- Speed-up by bitboards
+- Speed-up by bitboard
 - Simple evaluation function
 - Wins of random player in 100% games
 
 ## How to run
 
 ```
-cargo run --bin main --release
+cargo run --release
 ```
 
 ## Demo
