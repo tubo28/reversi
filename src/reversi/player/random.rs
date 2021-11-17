@@ -1,6 +1,6 @@
-use reversi::bitboard::*;
-use reversi::player::*;
-use reversi::{H, W};
+use crate::reversi::bitboard::*;
+use crate::reversi::player::*;
+use crate::reversi::{H, W};
 
 /// Player who always does random moves.
 pub struct RandomPlayer {

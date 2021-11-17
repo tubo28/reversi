@@ -1,6 +1,6 @@
-use reversi::asciiboard;
-use reversi::bitboard::*;
-use reversi::player::*;
+use crate::reversi::asciiboard;
+use crate::reversi::bitboard::*;
+use crate::reversi::player::*;
 use std::collections::BTreeMap;
 use std::io::*;
 

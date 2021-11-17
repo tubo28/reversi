@@ -2,10 +2,10 @@ pub mod alphabeta;
 pub mod cli;
 pub mod random;
 
-use reversi::bitboard;
-use reversi::rand;
-use reversi::util;
-use reversi::{H, W};
+use crate::reversi::bitboard;
+use crate::reversi::rand;
+use crate::reversi::util;
+use crate::reversi::{H, W};
 use std::cmp::max;
 
 /// Trait for reversi player.

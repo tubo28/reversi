@@ -1,7 +1,7 @@
-use reversi::asciiboard;
-use reversi::bitboard;
-use reversi::player::Player;
-use reversi::util;
+use crate::reversi::asciiboard;
+use crate::reversi::bitboard;
+use crate::reversi::player::Player;
+use crate::reversi::util;
 
 /// Player who will take the next move.
 #[derive(Clone)]
