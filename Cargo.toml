@@ -2,6 +2,7 @@
 name = "reversi"
 version = "0.1.0"
 authors = ["user"]
+edition = "2021"
 
 [dependencies]
 

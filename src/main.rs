@@ -1,11 +1,11 @@
 mod reversi;
 
-use player::alphabeta::AlphaBetaSearchPlayer;
-use player::cli::HumanPlayer;
-use player::random::RandomPlayer;
-use reversi::gm;
-use reversi::player;
-use reversi::util;
+use crate::player::alphabeta::AlphaBetaSearchPlayer;
+use crate::player::cli::HumanPlayer;
+use crate::player::random::RandomPlayer;
+use crate::reversi::gm;
+use crate::reversi::player;
+use crate::reversi::util;
 use std::io::{stdout, Write};
 
 fn main() {

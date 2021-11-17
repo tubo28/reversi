@@ -1,5 +1,5 @@
-use reversi::bitboard;
-use reversi::{H, W};
+use crate::reversi::bitboard;
+use crate::reversi::{H, W};
 
 /// Returns new empty board.
 pub fn empty() -> Vec<Vec<char>> {

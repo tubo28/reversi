@@ -1,4 +1,4 @@
-use reversi::{H, W};
+use crate::reversi::{H, W};
 
 // Bitmask of the 8 x 8 board. The cell on (i, j) (i-th row of j-th column)
 // corresponds to the (W*i+j)-th bit.
