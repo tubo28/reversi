@@ -80,7 +80,7 @@ impl Board {
             let t = t | w & (t >> 9);
             let t = t | w & (t >> 9);
             let blank = !(black | white);
-            return blank & (t >> 9);
+            blank & (t >> 9)
         }
 
         // Calculate the mask for valid cells of left direction or top-left direction four times
@@ -183,7 +183,7 @@ impl Board {
     /// `hints` are information for working in each direction.
     #[inline]
     pub fn flip_with_hints(&self, mov: Mask, hits: &ValidMaskParts) -> Board {
-        let flip = self.get_flip_mask(&hits, mov);
+        let flip = self.get_flip_mask(hits, mov);
         Board(self.0 | mov | flip, self.1 ^ flip)
     }
 }
@@ -199,11 +199,11 @@ pub fn rotate_mask(x: Mask) -> Mask {
         | ((x >> 2) & 0x0000333300003333)
         | ((x >> 16) & 0x0000CCCC0000CCCC)
         | ((x << 16) & 0x3333000033330000);
-    let x = ((x << 4) & 0xF0F0F0F000000000)
+    
+    ((x << 4) & 0xF0F0F0F000000000)
         | ((x >> 4) & 0x000000000F0F0F0F)
         | ((x >> 32) & 0x00000000F0F0F0F0)
-        | ((x << 32) & 0x0F0F0F0F00000000);
-    x
+        | ((x << 32) & 0x0F0F0F0F00000000)
 }
 
 /// Put disk in the cell at (r, c) cell.

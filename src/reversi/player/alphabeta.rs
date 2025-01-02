@@ -82,7 +82,7 @@ impl AlphaBetaSearchPlayer {
                     0b_00000000_01000010_00000000_00000000_00000000_00000000_01000010_00000000;
                 let mut weighted_disks = 0;
                 weighted_disks += ((ADD32 & disks).count_ones() << 5) as i32;
-                weighted_disks -= ((SUB01 & disks).count_ones() << 0) as i32;
+                weighted_disks -= (SUB01 & disks).count_ones() as i32;
                 weighted_disks -= ((SUB04 & disks).count_ones() << 2) as i32;
                 weighted_disks -= ((SUB08 & disks).count_ones() << 3) as i32;
                 weighted_disks -= ((SUB16 & disks).count_ones() << 4) as i32;
