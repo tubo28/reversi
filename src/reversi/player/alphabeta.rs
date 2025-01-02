@@ -65,29 +65,31 @@ impl AlphaBetaSearchPlayer {
             // In begging, give score for good places, and deduct for bad place.
             #[inline]
             fn eval(disks: Mask, moves: Mask) -> i32 {
+                // https://uguisu.skr.jp/othello/5-1.html
                 // Disks on this range add 32 points.
-                const ADD32: Mask =
+                const ADD30: Mask =
                     0b_10000001_00000000_00000000_00000000_00000000_00000000_00000000_10000001;
                 // Sub 1 point.
                 const SUB01: Mask =
                     0b_00011000_00000000_00011000_10111101_10111101_00011000_00000000_00011000;
-                // Sub 4 points
-                const SUB04: Mask =
+                // Sub 3 points
+                const SUB03: Mask =
                     0b_00000000_00111100_01000010_01000010_01000010_01000010_00111100_00000000;
-                // Sub 8 points
-                const SUB08: Mask =
+                // Sub 12 points
+                const SUB12: Mask =
                     0b_01000010_10000001_00000000_00000000_00000000_00000000_10000000_01000010;
-                // Sub 16 points
+                // Sub 15 points
                 const SUB16: Mask =
                     0b_00000000_01000010_00000000_00000000_00000000_00000000_01000010_00000000;
                 let mut weighted_disks = 0;
-                weighted_disks += ((ADD32 & disks).count_ones() << 5) as i32;
+                weighted_disks += ((ADD30 & disks).count_ones() << 5) as i32;
                 weighted_disks -= (SUB01 & disks).count_ones() as i32;
-                weighted_disks -= ((SUB04 & disks).count_ones() << 2) as i32;
-                weighted_disks -= ((SUB08 & disks).count_ones() << 3) as i32;
+                weighted_disks -= ((SUB03 & disks).count_ones() << 2) as i32;
+                weighted_disks -= ((SUB12 & disks).count_ones() << 3) as i32;
                 weighted_disks -= ((SUB16 & disks).count_ones() << 4) as i32;
 
                 let num_moves = moves.count_ones() as i32;
+                // add num_moves * 5 because it seems good when there is more valid positions.
                 weighted_disks * 10 + num_moves * 5
             }
             eval(black_disks, black_moves) - eval(white_disks, white_moves)
