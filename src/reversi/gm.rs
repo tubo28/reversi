@@ -19,11 +19,18 @@ impl Turn {
     }
 }
 
+#[derive(Clone, Debug)]
+pub enum Winner {
+    Black,
+    White,
+    Draw,
+}
+
 /// The result of a game
 /// TODO: Add sequence of moves.
 #[derive(Clone)]
 pub struct GameResult {
-    pub winner: Turn,
+    pub winner: Winner,
 
     // Which player will move it next
     pub board: bitboard::Board,
@@ -78,12 +85,9 @@ impl GameManager {
             println!("Final result:");
             asciiboard::print(&result.board);
             let (b, w) = result.disks;
-            if b > w {
-                println!("first ({}) wins!", self.black.name());
-            } else {
-                println!("second ({}) wins!", self.white.name());
-            }
-            println!("first ({}): {}, second ({}): {}", b, self.black.name(), w, self.white.name());
+            println!("{} black ({}): {}", asciiboard::BLACK_MARK, self.black.name(), b);
+            println!("{} white ({}): {}", asciiboard::WHITE_MARK, self.white.name(), w);
+            println!("winner: {:?}", result.winner);
         }
     }
 
@@ -91,7 +95,11 @@ impl GameManager {
     fn finalize(&mut self) {
         assert!(self.result.is_none());
         let (black, white) = self.board.count();
-        let winner = if black > white { Turn::Black } else { Turn::White };
+        let winner = match black.cmp(&white) {
+            std::cmp::Ordering::Greater => Winner::Black,
+            std::cmp::Ordering::Equal => Winner::Draw,
+            std::cmp::Ordering::Less => Winner::White,
+        };
         self.result =
             Some(GameResult { winner: winner, board: self.board.clone(), disks: (black, white) });
     }
@@ -103,7 +111,7 @@ impl GameManager {
             Turn::Black => self.black.next(&self.board),
             Turn::White => self.white.next(&self.board.switch()),
         };
-        // TODO: If None, we should check that is ok.
+        // TODO: If None (pass), we should check that is ok.
         if let Some(mov) = res {
             debug_assert!(mov.count_ones() == 1);
         };
@@ -120,14 +128,14 @@ impl GameManager {
                     if self.verbose {
                         let (r, c) = bitboard::coordinate(mov);
                         println!(
-                            "first ({}) chooses {}.",
+                            "black ({}) chooses {}.",
                             self.black.name(),
                             util::position_to_name(r, c)
                         );
                     }
                 } else {
                     if self.verbose {
-                        println!("first ({}) passed.", self.black.name());
+                        println!("black ({}) passed.", self.black.name());
                     }
                 }
             }
@@ -138,14 +146,14 @@ impl GameManager {
                     if self.verbose {
                         let (r, c) = bitboard::coordinate(mov);
                         println!(
-                            "second ({}) chooses {}.",
+                            "white ({}) chooses {}.",
                             self.white.name(),
                             util::position_to_name(r, c)
                         );
                     }
                 } else {
                     if self.verbose {
-                        println!("second ({}) passed.", self.white.name());
+                        println!("white ({}) passed.", self.white.name());
                     }
                 }
             }

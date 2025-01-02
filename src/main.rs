@@ -14,7 +14,7 @@ fn main() {
     println!("  b : random");
     println!("  c : human (from keyboard)");
 
-    let labels = ["first (black)", "second (white)"];
+    let labels = ["black (first)", "white (second)"];
     let mut players = Vec::new();
     for label in labels.iter() {
         print!("{} player? [A/b/c]: ", label);

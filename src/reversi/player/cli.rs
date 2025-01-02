@@ -18,20 +18,24 @@ impl HumanPlayer {
 impl Player for HumanPlayer {
     fn next(&mut self, board: &Board) -> Option<Mask> {
         let (black_moves, _) = board.get_valid_mask();
-        let markers = "123456789qwertyuipasdfghjklzcvbnmQWERTYUIPASDFGHJKLZCVBNM+-*/=()";
+        let markers = "123456789qwertyuipasdfghjklzcvbnmQWERTYUIPASDFGHJKLZCVBNM+-*/=()"
+            .chars()
+            .rev()
+            .collect::<Vec<_>>();
         debug_assert_eq!(markers.len(), H * W);
-        let mut markers = markers.chars().rev().collect::<Vec<_>>();
         let mut map = BTreeMap::new();
         let mut cand = Vec::new();
+        let mut num_used_markers = 0;
 
         {
             let mut g = asciiboard::empty();
-            asciiboard::write_mask(&mut g, board.0, 'X');
-            asciiboard::write_mask(&mut g, board.1, 'O');
+            asciiboard::write_mask(&mut g, board.0, asciiboard::BLACK_MARK);
+            asciiboard::write_mask(&mut g, board.1, asciiboard::WHITE_MARK);
             for j in 0..H {
                 for i in 0..H {
                     if get(black_moves, i, j) {
-                        let c = markers.pop().unwrap();
+                        let c = markers[num_used_markers];
+                        num_used_markers += 1;
                         g[i * 2 + 1][j * 2 + 1] = c;
                         map.insert(c, (i, j));
                         cand.push(c);
