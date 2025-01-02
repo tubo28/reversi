@@ -30,11 +30,9 @@ pub fn empty() -> Vec<Vec<char>> {
 pub fn write_mask(grid: &mut Vec<Vec<char>>, mask: bitboard::Mask, c: char) {
     for i in 0..H * 2 + 1 {
         for j in 0..W * 2 + 1 {
-            if i % 2 == 1 && j % 2 == 1 {
-                if bitboard::get(mask, i / 2, j / 2) {
-                    debug_assert_eq!(grid[i][j], EMPTY_MARK);
-                    grid[i][j] = c;
-                }
+            if i % 2 == 1 && j % 2 == 1 && bitboard::get(mask, i / 2, j / 2) {
+                debug_assert_eq!(grid[i][j], EMPTY_MARK);
+                grid[i][j] = c;
             }
         }
     }

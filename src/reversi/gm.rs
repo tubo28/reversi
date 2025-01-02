@@ -12,9 +12,9 @@ pub enum Turn {
 
 impl Turn {
     fn switch(&self) -> Turn {
-        match self {
-            &Turn::Black => Turn::White,
-            &Turn::White => Turn::Black,
+        match *self {
+            Turn::Black => Turn::White,
+            Turn::White => Turn::Black,
         }
     }
 }
@@ -101,7 +101,7 @@ impl GameManager {
             std::cmp::Ordering::Less => Winner::White,
         };
         self.result =
-            Some(GameResult { winner: winner, board: self.board.clone(), disks: (black, white) });
+            Some(GameResult { winner, board: self.board.clone(), disks: (black, white) });
     }
 
     // Let next player choose the move.
@@ -133,10 +133,8 @@ impl GameManager {
                             util::position_to_name(r, c)
                         );
                     }
-                } else {
-                    if self.verbose {
-                        println!("black ({}) passed.", self.black.name());
-                    }
+                } else if self.verbose {
+                    println!("black ({}) passed.", self.black.name());
                 }
             }
             Turn::White => {
@@ -151,10 +149,8 @@ impl GameManager {
                             util::position_to_name(r, c)
                         );
                     }
-                } else {
-                    if self.verbose {
-                        println!("white ({}) passed.", self.white.name());
-                    }
+                } else if self.verbose {
+                    println!("white ({}) passed.", self.white.name());
                 }
             }
         };
