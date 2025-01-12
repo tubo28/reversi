@@ -5,7 +5,8 @@
 - Alpha-beta search
 - Speed-up by bitboard
 - Simple evaluation function
-- Wins of random player in 100% games
+- Wins of random player in almost 100% games
+- No cargo package dependency
 
 ## How to run
 
