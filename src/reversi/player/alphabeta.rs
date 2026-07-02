@@ -72,7 +72,7 @@ impl AlphaBetaSearchPlayer {
         #[inline]
         fn eval(disks: Mask, moves: Mask) -> i32 {
             // https://uguisu.skr.jp/othello/5-1.html
-            // Disks on this range add 32 points.
+            // Disks on this range add 30 points.
             const ADD30: Mask =
                 0b_10000001_00000000_00000000_00000000_00000000_00000000_00000000_10000001;
             // Sub 1 point.
@@ -83,13 +83,13 @@ impl AlphaBetaSearchPlayer {
                 0b_00000000_00111100_01000010_01000010_01000010_01000010_00111100_00000000;
             // Sub 12 points
             const SUB12: Mask =
-                0b_01000010_10000001_00000000_00000000_00000000_00000000_10000000_01000010;
+                0b_01000010_10000001_00000000_00000000_00000000_00000000_10000001_01000010;
             // Sub 15 points
             const SUB16: Mask =
                 0b_00000000_01000010_00000000_00000000_00000000_00000000_01000010_00000000;
             let mut weighted_disks = 0;
             weighted_disks += ((ADD30 & disks).count_ones() * 30) as i32;
-            weighted_disks -= (SUB01 & disks).count_ones() as i32;
+            weighted_disks -= ((SUB01 & disks).count_ones() * 1) as i32;
             weighted_disks -= ((SUB03 & disks).count_ones() * 3) as i32;
             weighted_disks -= ((SUB12 & disks).count_ones() * 12) as i32;
             weighted_disks -= ((SUB16 & disks).count_ones() * 16) as i32;
@@ -109,10 +109,16 @@ impl Player for AlphaBetaSearchPlayer {
             None
         } else {
             // Search for all first moves from current boars.
+            // Narrow alpha with the best score found so far to prune clearly-worse
+            // moves. beta stays at INF since there is no upper bound at the root.
+            // Moves that tie the running best still return their exact score, so the
+            // random tie-break below keeps choosing uniformly among equal-best moves.
+            let mut alpha = -INF;
             let mut best = (i32::min_value(), u32::min_value(), 0); // score, rand, position
             for mov in (0..H * W).map(|i| 1 << i).filter(|&m| black_moves & m == m) {
                 let revered = board.flip_with_hints(mov, &parts);
-                let score = -self.search(&revered.switch(), -INF, INF, SEARCH_DEPTH, false);
+                let score = -self.search(&revered.switch(), -INF, -alpha, SEARCH_DEPTH, false);
+                alpha = max(alpha, score);
                 best = max(best, (score, self.rand.next() + 1, mov));
             }
             let (_, _, best_position) = best;
