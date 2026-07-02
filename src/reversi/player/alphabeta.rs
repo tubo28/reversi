@@ -108,25 +108,101 @@ impl Player for AlphaBetaSearchPlayer {
         if black_moves == 0 {
             None
         } else {
-            // Search for all first moves from current boars.
-            // Narrow alpha with the best score found so far to prune clearly-worse
-            // moves. beta stays at INF since there is no upper bound at the root.
-            // Moves that tie the running best still return their exact score, so the
-            // random tie-break below keeps choosing uniformly among equal-best moves.
+            // Enumerate all first moves and shuffle them so that, among moves that
+            // tie for the best score, the first one encountered (and thus chosen) is
+            // picked uniformly at random.
+            let mut moves = (0..H * W)
+                .map(|i| 1 << i)
+                .filter(|&mov| mov & black_moves == mov)
+                .collect::<Vec<_>>();
+            let n = moves.len();
+            // Do Fisher-Yates algorithm.
+            for i in 0..n - 1 {
+                moves.swap(i, i + self.rand.next() as usize % (n - i));
+            }
+
+            // Search each first move, narrowing alpha with the best score so far to
+            // prune clearly-worse moves. beta stays at INF since there is no upper
+            // bound at the root. Only a strictly better score updates the choice, so
+            // a worse move that fails high to exactly alpha can never be selected.
             let mut alpha = -INF;
-            let mut best = (i32::min_value(), u32::min_value(), 0); // score, rand, position
-            for mov in (0..H * W).map(|i| 1 << i).filter(|&m| black_moves & m == m) {
+            let mut best_position = moves[0];
+            for &mov in moves.iter() {
                 let revered = board.flip_with_hints(mov, &parts);
                 let score = -self.search(&revered.switch(), -INF, -alpha, SEARCH_DEPTH, false);
-                alpha = max(alpha, score);
-                best = max(best, (score, self.rand.next() + 1, mov));
+                if score > alpha {
+                    alpha = score;
+                    best_position = mov;
+                }
             }
-            let (_, _, best_position) = best;
             Some(best_position)
         }
     }
 
     fn name(&self) -> &'static str {
         "Alpha-Beta"
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::AlphaBetaSearchPlayer;
+    use crate::reversi::gm::{GameManager, Winner};
+    use crate::reversi::player::random::RandomPlayer;
+
+    // Number of games played against the random player.
+    const GAMES: u32 = 100;
+    // The alpha-beta player is randomized and does not solve the endgame, so it may
+    // lose to random on rare occasions. Require it to win the vast majority instead
+    // of every single game. Seeds are fixed, so this test is fully deterministic.
+    const MIN_WINS: u32 = 95;
+
+    // Plays GAMES games between the alpha-beta player and the random player and
+    // asserts the alpha-beta player wins at least MIN_WINS of them.
+    // `alpha_beta_is_black` chooses whether the alpha-beta player moves first (black)
+    // or second (white).
+    fn assert_alpha_beta_dominates(alpha_beta_is_black: bool) {
+        let mut wins = 0;
+        let mut losses = Vec::new();
+        for seed in 0..GAMES {
+            // Use a distinct seed per game so the games differ, and different seeds
+            // for the two players so they don't share a random stream.
+            let ab = || Box::new(AlphaBetaSearchPlayer::new(seed));
+            let rand = || Box::new(RandomPlayer::new(seed.wrapping_add(1_000_000)));
+            // The side the alpha-beta player takes is the one we expect to win.
+            let (expected, mut gm) = if alpha_beta_is_black {
+                (Winner::Black, GameManager::new(ab(), rand()))
+            } else {
+                (Winner::White, GameManager::new(rand(), ab()))
+            };
+            gm.verbose = false;
+            gm.playout();
+
+            let result = gm.result.as_ref().expect("game must be finished");
+            if std::mem::discriminant(&result.winner) == std::mem::discriminant(&expected) {
+                wins += 1;
+            } else {
+                losses.push((seed, result.winner.clone(), result.disks));
+            }
+        }
+        let side = if alpha_beta_is_black { "black" } else { "white" };
+        assert!(
+            wins >= MIN_WINS,
+            "alpha-beta ({side}) won only {wins}/{GAMES} (need >= {MIN_WINS}); lost games: {losses:?}"
+        );
+    }
+
+    /// The alpha-beta player, playing black (first), must beat the random player in
+    /// at least MIN_WINS of GAMES.
+    #[test]
+    fn beats_random_as_black_almost_always() {
+        assert_alpha_beta_dominates(true);
+    }
+
+    /// The alpha-beta player, playing white (second), must beat the random player in
+    /// at least MIN_WINS of GAMES.
+    #[test]
+    fn beats_random_as_white_almost_always() {
+        assert_alpha_beta_dominates(false);
     }
 }
