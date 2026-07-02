@@ -203,34 +203,64 @@ mod tests {
     // of every single game. Seeds are fixed, so this test is fully deterministic.
     const MIN_WINS: u32 = 95;
 
+    // Plays a single deterministic game between the alpha-beta player and the random
+    // player. Returns Ok(()) if alpha-beta won, or Err with the loss details otherwise.
+    fn play_game(seed: u32, alpha_beta_is_black: bool) -> Result<(), (u32, Winner, (u32, u32))> {
+        // Use a distinct seed per game so the games differ, and different seeds
+        // for the two players so they don't share a random stream.
+        let ab = || Box::new(AlphaBetaSearchPlayer::new(seed));
+        let rand = || Box::new(RandomPlayer::new(seed.wrapping_add(1_000_000)));
+        // The side the alpha-beta player takes is the one we expect to win.
+        let (expected, mut gm) = if alpha_beta_is_black {
+            (Winner::Black, GameManager::new(ab(), rand()))
+        } else {
+            (Winner::White, GameManager::new(rand(), ab()))
+        };
+        gm.verbose = false;
+        gm.playout();
+
+        let result = gm.result.as_ref().expect("game must be finished");
+        if std::mem::discriminant(&result.winner) == std::mem::discriminant(&expected) {
+            Ok(())
+        } else {
+            Err((seed, result.winner.clone(), result.disks))
+        }
+    }
+
     // Plays GAMES games between the alpha-beta player and the random player and
     // asserts the alpha-beta player wins at least MIN_WINS of them.
     // `alpha_beta_is_black` chooses whether the alpha-beta player moves first (black)
-    // or second (white).
+    // or second (white). Games are independent and each fully seeded, so they are run
+    // in parallel across the available CPUs; the result is identical to running them
+    // serially.
     fn assert_alpha_beta_dominates(alpha_beta_is_black: bool) {
-        let mut wins = 0;
-        let mut losses = Vec::new();
-        for seed in 0..GAMES {
-            // Use a distinct seed per game so the games differ, and different seeds
-            // for the two players so they don't share a random stream.
-            let ab = || Box::new(AlphaBetaSearchPlayer::new(seed));
-            let rand = || Box::new(RandomPlayer::new(seed.wrapping_add(1_000_000)));
-            // The side the alpha-beta player takes is the one we expect to win.
-            let (expected, mut gm) = if alpha_beta_is_black {
-                (Winner::Black, GameManager::new(ab(), rand()))
-            } else {
-                (Winner::White, GameManager::new(rand(), ab()))
-            };
-            gm.verbose = false;
-            gm.playout();
+        // Leave one CPU free (but always use at least one thread).
+        let threads = std::thread::available_parallelism()
+            .map(|n| (n.get() - 1).max(1))
+            .unwrap_or(1);
+        // Each thread handles a strided subset of the seeds (thread t: t, t+threads, ...).
+        let per_thread: Vec<Vec<(u32, Winner, (u32, u32))>> = std::thread::scope(|s| {
+            let handles: Vec<_> = (0..threads)
+                .map(|t| {
+                    s.spawn(move || {
+                        let mut losses = Vec::new();
+                        let mut seed = t as u32;
+                        while seed < GAMES {
+                            if let Err(loss) = play_game(seed, alpha_beta_is_black) {
+                                losses.push(loss);
+                            }
+                            seed += threads as u32;
+                        }
+                        losses
+                    })
+                })
+                .collect();
+            handles.into_iter().map(|h| h.join().unwrap()).collect()
+        });
 
-            let result = gm.result.as_ref().expect("game must be finished");
-            if std::mem::discriminant(&result.winner) == std::mem::discriminant(&expected) {
-                wins += 1;
-            } else {
-                losses.push((seed, result.winner.clone(), result.disks));
-            }
-        }
+        let mut losses: Vec<_> = per_thread.into_iter().flatten().collect();
+        losses.sort_by_key(|&(seed, _, _)| seed);
+        let wins = GAMES - losses.len() as u32;
         let side = if alpha_beta_is_black { "black" } else { "white" };
         assert!(
             wins >= MIN_WINS,
