@@ -1,0 +1,157 @@
+:root {
+  --board-size: min(92vw, 480px);
+  --cell: calc(var(--board-size) / 8);
+  --line: #1b5e20;
+  --felt: #2e7d32;
+  --felt-hover: #388e3c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: #12241a;
+  color: #fff;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.app {
+  padding: 24px 16px 48px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.controls {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.controls select,
+.controls button {
+  font-size: 1rem;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #4caf50;
+  background: #1b3a2a;
+  color: #fff;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.controls button:hover {
+  background: #24503a;
+}
+
+.scores {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.score {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.board {
+  width: var(--board-size);
+  height: var(--board-size);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  gap: 2px;
+  background: var(--line);
+  border: 3px solid var(--line);
+  border-radius: 4px;
+}
+
+.cell {
+  background: var(--felt);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  padding: 0;
+  border: none;
+}
+
+.cell.playable {
+  cursor: pointer;
+}
+
+.cell.playable:hover {
+  background: var(--felt-hover);
+}
+
+.disk {
+  width: 78%;
+  height: 78%;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.disk.black {
+  background: #000;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+.disk.white {
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* Marker on the disk that was just placed. */
+.disk {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.marker {
+  width: 30%;
+  height: 30%;
+  border-radius: 50%;
+}
+
+.disk.black .marker {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.disk.white .marker {
+  background: rgba(0, 0, 0, 0.55);
+}
+
+/* Small dot on the empty cells where the human may play. */
+.hint {
+  width: 28%;
+  height: 28%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.scores .disk {
+  width: 22px;
+  height: 22px;
+}
+
+.status {
+  margin-top: 20px;
+  min-height: 1.4em;
+  font-size: 1.05rem;
+}

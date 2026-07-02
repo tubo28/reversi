@@ -1,3 +1,5 @@
-
 /target/
 **/*.rs.bk
+web/public/reversi.wasm
+web/node_modules/
+web/dist/
