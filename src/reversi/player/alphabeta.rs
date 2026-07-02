@@ -9,6 +9,11 @@ pub struct AlphaBetaSearchPlayer {
 
 const SEARCH_DEPTH: usize = 7;
 
+// When this few empty cells remain, switch to an exact endgame solver
+// (search to the end of the game) instead of the heuristic depth-limited search.
+// WLD prunes strongly, so 10 is solved almost instantly; it can be raised to 12-14.
+const ENDGAME_EMPTIES: u32 = 10;
+
 // A enough large evaluate value.
 const INF: i32 = 100_000_000;
 
@@ -50,6 +55,37 @@ impl AlphaBetaSearchPlayer {
             }
             alpha
         }
+    }
+
+    /// Exact endgame solver. Searches to the end of the game (no depth limit) and
+    /// returns the win/loss/draw result from the current player's perspective:
+    /// +1 win, 0 draw, -1 loss. Used when only a few empty cells remain.
+    fn solve(&mut self, board: &Board, alpha: i32, beta: i32, passed: bool) -> i32 {
+        debug_assert!(alpha <= beta);
+        let (my_moves, parts) = board.get_valid_mask();
+        if my_moves == 0 {
+            if passed {
+                // Both players passed -> game over. Score by raw disk counts,
+                // matching evaluate() / GameManager::finalize().
+                let (me, opp) = board.count();
+                return (me as i32 - opp as i32).signum();
+            }
+            // No valid moves, pass.
+            return -self.solve(&board.switch(), -beta, -alpha, true);
+        }
+        let mut alpha = alpha;
+        // Natural bit order is fine here: move ordering only affects pruning speed,
+        // not the WLD result. The randomized choice among equally-good moves is done
+        // at the root in next().
+        for mov in (0..H * W).map(|i| 1 << i).filter(|&m| m & my_moves == m) {
+            let flipped = board.flip_with_hints(mov, &parts);
+            let score = -self.solve(&flipped.switch(), -beta, -alpha, false);
+            alpha = max(alpha, score);
+            if alpha >= beta {
+                break;
+            }
+        }
+        alpha
     }
 
     /// A simple evaluate function. The higher value for the greater the advantage.
@@ -121,6 +157,12 @@ impl Player for AlphaBetaSearchPlayer {
                 moves.swap(i, i + self.rand.next() as usize % (n - i));
             }
 
+            // Once only a few empty cells remain, solve the game exactly to the end
+            // (WLD) instead of the heuristic depth-limited search.
+            let (black, white) = board.count();
+            let empties = (H * W) as u32 - black - white;
+            let endgame = empties <= ENDGAME_EMPTIES;
+
             // Search each first move, narrowing alpha with the best score so far to
             // prune clearly-worse moves. beta stays at INF since there is no upper
             // bound at the root. Only a strictly better score updates the choice, so
@@ -129,7 +171,11 @@ impl Player for AlphaBetaSearchPlayer {
             let mut best_position = moves[0];
             for &mov in moves.iter() {
                 let revered = board.flip_with_hints(mov, &parts);
-                let score = -self.search(&revered.switch(), -INF, -alpha, SEARCH_DEPTH, false);
+                let score = if endgame {
+                    -self.solve(&revered.switch(), -INF, -alpha, false)
+                } else {
+                    -self.search(&revered.switch(), -INF, -alpha, SEARCH_DEPTH, false)
+                };
                 if score > alpha {
                     alpha = score;
                     best_position = mov;
