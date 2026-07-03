@@ -16,6 +16,7 @@ use reversi::reversi::gm::{GameManager, Winner};
 use reversi::reversi::player::alphabeta::AlphaBetaSearchPlayer;
 use reversi::reversi::player::alphabeta2::AlphaBeta2Player;
 use reversi::reversi::player::alphabeta3::AlphaBeta3Player;
+use reversi::reversi::player::alphabeta4::AlphaBeta4Player;
 use reversi::reversi::player::Player;
 
 // Games per ordered pair (so each unordered pair plays GAMES as first + GAMES as
@@ -34,9 +35,16 @@ fn mk_ab2(seed: u32) -> Box<dyn Player> {
 fn mk_ab3(seed: u32) -> Box<dyn Player> {
     Box::new(AlphaBeta3Player::new(seed))
 }
+fn mk_ab4(seed: u32) -> Box<dyn Player> {
+    Box::new(AlphaBeta4Player::new(seed))
+}
 
-const ENGINES: [(&str, Factory); 3] =
-    [("Alpha-Beta", mk_ab), ("Alpha-Beta2", mk_ab2), ("Alpha-Beta3", mk_ab3)];
+const ENGINES: [(&str, Factory); 4] = [
+    ("Alpha-Beta", mk_ab),
+    ("Alpha-Beta2", mk_ab2),
+    ("Alpha-Beta3", mk_ab3),
+    ("Alpha-Beta4", mk_ab4),
+];
 
 // One scheduled game: `black`/`white` are indices into ENGINES.
 #[derive(Clone, Copy)]
