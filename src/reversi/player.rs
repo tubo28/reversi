@@ -1,5 +1,6 @@
 pub mod alphabeta;
 pub mod alphabeta2;
+pub mod alphabeta3;
 pub mod cli;
 pub mod random;
 

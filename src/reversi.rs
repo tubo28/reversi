@@ -1,6 +1,7 @@
 pub mod asciiboard;
 pub mod bitboard;
 pub mod gm;
+pub mod hash;
 pub mod player;
 pub mod rand;
 pub mod util;

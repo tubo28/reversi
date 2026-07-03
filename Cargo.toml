@@ -14,3 +14,15 @@ crate-type = ["cdylib", "rlib"]
 [[bin]]
 name = "main"
 path = "src/main.rs"
+
+[[bench]]
+name = "hash"
+harness = false
+
+[[bench]]
+name = "league"
+harness = false
+
+[[bench]]
+name = "tune"
+harness = false
