@@ -10,7 +10,7 @@
 //! JS side keeps `(black, white)` as BigInts and reconstructs the next board
 //! from the flip mask returned by [`flip_mask`].
 use crate::reversi::bitboard::Board;
-use crate::reversi::player::alphabeta::AlphaBetaSearchPlayer;
+use crate::reversi::player::alphabeta42::AlphaBeta42Player;
 use crate::reversi::player::Player;
 
 /// Mask of cells where the black (to-move) player may put a disk.
@@ -42,7 +42,7 @@ pub extern "C" fn flip_mask(black: u64, white: u64, mov: u64) -> u64 {
 /// move (the player must pass). `seed` seeds the AI's move randomization.
 #[no_mangle]
 pub extern "C" fn ai_move(black: u64, white: u64, seed: u32) -> u64 {
-    AlphaBetaSearchPlayer::new(seed)
+    AlphaBeta42Player::new(seed)
         .next(&Board(black, white))
         .unwrap_or(0)
 }

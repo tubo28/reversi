@@ -36,6 +36,10 @@ name = "tune4"
 harness = false
 
 [[bench]]
+name = "bitboard"
+harness = false
+
+[[bench]]
 name = "duel42"
 harness = false
 
