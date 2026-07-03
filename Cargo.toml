@@ -30,3 +30,15 @@ harness = false
 [[bench]]
 name = "duel"
 harness = false
+
+[[bench]]
+name = "tune4"
+harness = false
+
+[[bench]]
+name = "duel42"
+harness = false
+
+[[bench]]
+name = "tune42"
+harness = false
