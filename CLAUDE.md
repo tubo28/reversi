@@ -1,0 +1,2 @@
+- t_wada TDD
+- Functional, immutable, stateless, isolate states, isolate side-effects
