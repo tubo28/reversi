@@ -10,7 +10,7 @@
 //! JS side keeps `(black, white)` as BigInts and reconstructs the next board
 //! from the flip mask returned by [`flip_mask`].
 use crate::reversi::bitboard::Board;
-use crate::reversi::player::alphabeta5::AlphaBeta5Player;
+use crate::reversi::player::best::{get_best_ai_player, BestAiPlayer};
 use crate::reversi::player::Player;
 use crate::reversi::sprint::generate_win_position;
 use std::cell::RefCell;
@@ -26,7 +26,7 @@ thread_local! {
     // A single persistent AI so its (safe-to-carry) endgame solve table survives
     // across moves within a game. wasm32 is single-threaded, so this thread-local
     // is effectively a global. Re-created whenever the caller changes `seed`.
-    static AI: RefCell<Option<(u32, AlphaBeta5Player)>> = const { RefCell::new(None) };
+    static AI: RefCell<Option<(u32, BestAiPlayer)>> = const { RefCell::new(None) };
 
     // Stash for the most recent `generate_endgame` result: (me, opp, margin) from
     // the mover's perspective (`me` = side to move = human). Read back through the
@@ -67,7 +67,7 @@ pub extern "C" fn ai_move(black: u64, white: u64, seed: u32) -> u64 {
     AI.with(|cell| {
         let mut slot = cell.borrow_mut();
         if slot.as_ref().map(|(s, _)| *s) != Some(seed) {
-            *slot = Some((seed, AlphaBeta5Player::new(seed)));
+            *slot = Some((seed, get_best_ai_player(seed)));
         }
         let (_, ai) = slot.as_mut().unwrap();
         ai.next(&Board(black, white)).unwrap_or(0)
@@ -76,7 +76,7 @@ pub extern "C" fn ai_move(black: u64, white: u64, seed: u32) -> u64 {
 
 /// Generates a "sprint" endgame position with `target_empties` empty cells in
 /// which the side to move has a *proven* forced win (confirmed by exact endgame
-/// search), via AlphaBeta5-vs-AlphaBeta5 self-play. Returns 1 on success (the
+/// search), via engine self-play. Returns 1 on success (the
 /// position is stashed; read it with [`generated_black`] / [`generated_white`] /
 /// [`generated_margin`]) or 0 if none was found. The stashed board is from the
 /// mover's perspective, so the human should be set up as the side to move.

@@ -4,6 +4,7 @@ pub mod alphabeta3;
 pub mod alphabeta4;
 pub mod alphabeta42;
 pub mod alphabeta5;
+pub mod best;
 pub mod cli;
 pub mod random;
 
