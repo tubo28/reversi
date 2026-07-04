@@ -4,6 +4,7 @@ pub mod gm;
 pub mod hash;
 pub mod player;
 pub mod rand;
+pub mod sprint;
 pub mod util;
 
 /// Height of board.

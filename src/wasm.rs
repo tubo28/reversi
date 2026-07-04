@@ -12,13 +12,26 @@
 use crate::reversi::bitboard::Board;
 use crate::reversi::player::alphabeta5::AlphaBeta5Player;
 use crate::reversi::player::Player;
+use crate::reversi::sprint::generate_win_position;
 use std::cell::RefCell;
+
+// Sprint-generation tuning (see `src/reversi/sprint.rs`). The verdict is proven
+// by exact tree exhaustion, so these only trade generation time against how often
+// a game yields a to-move forced win — never the correctness of the win.
+const GEN_BUDGET: u64 = 120_000; // per-move node budget for the self-play AB5
+const SOLVE_BUDGET: u64 = 40_000_000; // node budget for the verification solve
+const MAX_ATTEMPTS: u32 = 12; // self-play games tried before giving up
 
 thread_local! {
     // A single persistent AI so its (safe-to-carry) endgame solve table survives
     // across moves within a game. wasm32 is single-threaded, so this thread-local
     // is effectively a global. Re-created whenever the caller changes `seed`.
     static AI: RefCell<Option<(u32, AlphaBeta5Player)>> = const { RefCell::new(None) };
+
+    // Stash for the most recent `generate_endgame` result: (me, opp, margin) from
+    // the mover's perspective (`me` = side to move = human). Read back through the
+    // getters below, since each extern fn can only return a single u64.
+    static GENERATED: RefCell<Option<(u64, u64, i32)>> = const { RefCell::new(None) };
 }
 
 /// Mask of cells where the black (to-move) player may put a disk.
@@ -59,4 +72,42 @@ pub extern "C" fn ai_move(black: u64, white: u64, seed: u32) -> u64 {
         let (_, ai) = slot.as_mut().unwrap();
         ai.next(&Board(black, white)).unwrap_or(0)
     })
+}
+
+/// Generates a "sprint" endgame position with `target_empties` empty cells in
+/// which the side to move has a *proven* forced win (confirmed by exact endgame
+/// search), via AlphaBeta5-vs-AlphaBeta5 self-play. Returns 1 on success (the
+/// position is stashed; read it with [`generated_black`] / [`generated_white`] /
+/// [`generated_margin`]) or 0 if none was found. The stashed board is from the
+/// mover's perspective, so the human should be set up as the side to move.
+#[no_mangle]
+pub extern "C" fn generate_endgame(seed: u32, target_empties: u32) -> u64 {
+    let result = generate_win_position(seed, target_empties, GEN_BUDGET, SOLVE_BUDGET, MAX_ATTEMPTS);
+    GENERATED.with(|cell| {
+        *cell.borrow_mut() = result.as_ref().map(|w| (w.me, w.opp, w.margin));
+    });
+    if result.is_some() {
+        1
+    } else {
+        0
+    }
+}
+
+/// The side-to-move (human) disks of the last successful [`generate_endgame`].
+#[no_mangle]
+pub extern "C" fn generated_black() -> u64 {
+    GENERATED.with(|cell| cell.borrow().map(|(me, _, _)| me).unwrap_or(0))
+}
+
+/// The opponent (AI) disks of the last successful [`generate_endgame`].
+#[no_mangle]
+pub extern "C" fn generated_white() -> u64 {
+    GENERATED.with(|cell| cell.borrow().map(|(_, opp, _)| opp).unwrap_or(0))
+}
+
+/// The proven forced-win margin (final disc difference) of the last successful
+/// [`generate_endgame`]; positive on success. Returned as `u64` per the C ABI.
+#[no_mangle]
+pub extern "C" fn generated_margin() -> u64 {
+    GENERATED.with(|cell| cell.borrow().map(|(_, _, m)| m as i64 as u64).unwrap_or(0))
 }

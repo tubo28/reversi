@@ -15,6 +15,12 @@ interface ReversiWasm {
   valid_moves(black: bigint, white: bigint): bigint;
   flip_mask(black: bigint, white: bigint, mov: bigint): bigint;
   ai_move(black: bigint, white: bigint, seed: number): bigint;
+  // Sprint mode: generate a position where the side to move has a proven forced
+  // win (confirmed by exact endgame search), then read it back via the getters.
+  generate_endgame(seed: number, targetEmpties: number): bigint;
+  generated_black(): bigint;
+  generated_white(): bigint;
+  generated_margin(): bigint;
 }
 
 type Side = "black" | "white";
@@ -229,6 +235,46 @@ function newGame(color: Side): void {
   step();
 }
 
+// --- sprint mode ---------------------------------------------------------
+
+// Generate a guaranteed-win endgame and start playing it out. The generation is
+// a heavy synchronous WASM call, so we paint the "generating" status first (via
+// setTimeout) before blocking, matching how aiMove() is scheduled.
+function newSprint(): void {
+  busy = true;
+  gameOver = false;
+  lastMove = -1;
+  setStatus("生成中。。。");
+  render(); // redraw with the board disabled while we generate
+
+  setTimeout(() => {
+    const seed = Math.floor(Math.random() * 0x100000000);
+    const targetEmpties = Number(
+      (document.getElementById("sprint-empties") as HTMLSelectElement).value,
+    );
+    const ok = (wasm.generate_endgame(seed, targetEmpties) & U64) !== 0n;
+    if (!ok) {
+      busy = false;
+      setStatus("生成に失敗しました。もう一度お試しください。");
+      render();
+      return;
+    }
+    // The stashed board is from the mover's perspective; present the human as
+    // Black to move (Reversi is colour-symmetric, so this is just a label).
+    black = wasm.generated_black() & U64;
+    white = wasm.generated_white() & U64;
+    const margin = wasm.generated_margin() & U64;
+    turn = "black";
+    humanColor = "black";
+    busy = false;
+    gameOver = false;
+    lastMove = -1;
+    render();
+    step();
+    setStatus(`あなたの手番です（最善で必勝・+${margin}石）`);
+  }, 50);
+}
+
 // --- boot ----------------------------------------------------------------
 
 async function loadWasm(): Promise<ReversiWasm> {
@@ -253,6 +299,7 @@ async function main(): Promise<void> {
   }
   (document.getElementById("new-black") as HTMLElement).addEventListener("click", () => newGame("black"));
   (document.getElementById("new-white") as HTMLElement).addEventListener("click", () => newGame("white"));
+  (document.getElementById("new-sprint") as HTMLElement).addEventListener("click", () => newSprint());
   newGame("black");
 }
 

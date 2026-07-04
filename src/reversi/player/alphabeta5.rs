@@ -396,6 +396,23 @@ impl AlphaBeta5Player {
         n
     }
 
+    /// Exact endgame result for the side to move (`board.0`): the final disc
+    /// difference (me − opp) under perfect play by both sides, or `None` if the
+    /// node budget ran out before the exact tree was exhausted. A positive value
+    /// is a *proven* forced win. Only affordable at low empty counts; used by the
+    /// sprint generator to confirm a position is a guaranteed win. Never trust a
+    /// `None` (aborted) result as a verdict.
+    pub fn solve_exact(&mut self, board: &Board) -> Option<i32> {
+        self.nodes = 0;
+        self.aborted = false;
+        let v = self.solve(board, -INF, INF, false);
+        if self.aborted {
+            None
+        } else {
+            Some(v)
+        }
+    }
+
     /// Exact endgame solver (PVS), returning the exact final *disc difference*
     /// (my discs − opp discs). Budget-guarded like `search`.
     fn solve(&mut self, board: &Board, alpha: i32, beta: i32, passed: bool) -> i32 {
