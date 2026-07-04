@@ -10,8 +10,16 @@
 //! JS side keeps `(black, white)` as BigInts and reconstructs the next board
 //! from the flip mask returned by [`flip_mask`].
 use crate::reversi::bitboard::Board;
-use crate::reversi::player::alphabeta42::AlphaBeta42Player;
+use crate::reversi::player::alphabeta5::AlphaBeta5Player;
 use crate::reversi::player::Player;
+use std::cell::RefCell;
+
+thread_local! {
+    // A single persistent AI so its (safe-to-carry) endgame solve table survives
+    // across moves within a game. wasm32 is single-threaded, so this thread-local
+    // is effectively a global. Re-created whenever the caller changes `seed`.
+    static AI: RefCell<Option<(u32, AlphaBeta5Player)>> = const { RefCell::new(None) };
+}
 
 /// Mask of cells where the black (to-move) player may put a disk.
 #[no_mangle]
@@ -39,10 +47,16 @@ pub extern "C" fn flip_mask(black: u64, white: u64, mov: u64) -> u64 {
 }
 
 /// Best move mask for the black (to-move) player, or 0 if there is no legal
-/// move (the player must pass). `seed` seeds the AI's move randomization.
+/// move (the player must pass). `seed` seeds the AI's move randomization; the
+/// persistent player is rebuilt whenever `seed` changes (i.e. a new game).
 #[no_mangle]
 pub extern "C" fn ai_move(black: u64, white: u64, seed: u32) -> u64 {
-    AlphaBeta42Player::new(seed)
-        .next(&Board(black, white))
-        .unwrap_or(0)
+    AI.with(|cell| {
+        let mut slot = cell.borrow_mut();
+        if slot.as_ref().map(|(s, _)| *s) != Some(seed) {
+            *slot = Some((seed, AlphaBeta5Player::new(seed)));
+        }
+        let (_, ai) = slot.as_mut().unwrap();
+        ai.next(&Board(black, white)).unwrap_or(0)
+    })
 }

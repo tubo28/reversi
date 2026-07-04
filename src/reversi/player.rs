@@ -3,6 +3,7 @@ pub mod alphabeta2;
 pub mod alphabeta3;
 pub mod alphabeta4;
 pub mod alphabeta42;
+pub mod alphabeta5;
 pub mod cli;
 pub mod random;
 

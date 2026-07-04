@@ -46,3 +46,7 @@ harness = false
 [[bench]]
 name = "tune42"
 harness = false
+
+[[bench]]
+name = "duel5"
+harness = false
