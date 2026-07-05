@@ -18,7 +18,7 @@ cargo run --release
 
 The same engine (including the alpha-beta AI and the exact endgame solver) also
 runs in the browser via WebAssembly, with no `wasm-bindgen` / `wasm-pack` and no
-cargo dependencies. The frontend (TypeScript, built with Vite) lives in `web/`.
+cargo dependencies. The frontend (React + TypeScript, built with Vite) lives in `web/`.
 
 Prerequisite: the `wasm32-unknown-unknown` target.
 
@@ -34,6 +34,7 @@ npm install
 npm run dev         # dev server with HMR -> http://localhost:5173
 npm run build       # production bundle -> web/dist/
 npm run preview     # serve the production build to check it
+npm test            # run the Vitest suite
 ```
 
 `npm run dev` and `npm run build` both first run `npm run wasm`, which builds the
