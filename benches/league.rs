@@ -152,10 +152,7 @@ fn play_league(engines: &[(&'static str, Factory)], spec: Spec) -> Outcome {
     // Distinct seed streams so the two engines never share randomness.
     let black = engines[spec.black].1(spec.seed);
     let white = engines[spec.white].1(spec.seed.wrapping_add(1_000_000));
-    let mut gm = GameManager::new(black, white);
-    gm.verbose = false;
-    gm.playout();
-    match gm.result.as_ref().expect("game must be finished").winner {
+    match GameManager::new(black, white).playout().winner {
         Winner::Black => Outcome::Black,
         Winner::White => Outcome::White,
         Winner::Draw => Outcome::Draw,

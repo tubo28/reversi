@@ -134,10 +134,7 @@ fn main() {
         let mut m = c.moves;
         while m != 0 {
             let mov = m & m.wrapping_neg();
-            assert_eq!(
-                flip_discs(c.board.0, c.board.1, mov),
-                flip_ref(c.board.0, c.board.1, mov)
-            );
+            assert_eq!(flip_discs(c.board.0, c.board.1, mov), flip_ref(c.board.0, c.board.1, mov));
             m &= m - 1;
         }
     }

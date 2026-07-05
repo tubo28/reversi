@@ -28,5 +28,5 @@ fn main() {
 
     let black = players.swap_remove(0);
     let white = players.swap_remove(0);
-    gm::GameManager::new(black, white).playout();
+    gm::GameManager::new(black, white).playout_verbose();
 }

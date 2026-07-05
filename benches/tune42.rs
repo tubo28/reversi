@@ -111,15 +111,14 @@ struct GameOut {
 
 fn play(spec: Spec, weights: PhaseWeights) -> GameOut {
     let cand = || Box::new(AlphaBeta4Player::with_weights(spec.seed, weights));
-    let champ = || Box::new(AlphaBeta4Player::with_weights(spec.seed.wrapping_add(1_000_000), champion()));
+    let champ =
+        || Box::new(AlphaBeta4Player::with_weights(spec.seed.wrapping_add(1_000_000), champion()));
     let (mut gm, cand_is_black) = if spec.cand_black {
         (GameManager::new(cand(), champ()), true)
     } else {
         (GameManager::new(champ(), cand()), false)
     };
-    gm.verbose = false;
-    gm.playout();
-    let res = gm.result.as_ref().expect("game must be finished");
+    let res = gm.playout();
     let (black, white) = res.disks;
     let margin =
         if cand_is_black { black as i32 - white as i32 } else { white as i32 - black as i32 };
@@ -204,7 +203,10 @@ fn main() {
     );
     println!("elapsed: {:.1}s ({} threads)", elapsed.as_secs_f64(), threads);
     println!();
-    println!("{:<22} {:>4} {:>4} {:>4} {:>6} {:>10}", "candidate", "W", "L", "D", "net", "avg-marg");
+    println!(
+        "{:<22} {:>4} {:>4} {:>4} {:>6} {:>10}",
+        "candidate", "W", "L", "D", "net", "avg-marg"
+    );
     for (i, win, loss, draw, net, avgm) in rows.iter() {
         println!(
             "{:<22} {:>4} {:>4} {:>4} {:>+6} {:>+10.2}",

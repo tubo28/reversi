@@ -262,8 +262,7 @@ mod tests {
     #[test]
     fn legal_moves_initial_board_matches_oracle() {
         let b = Board::new();
-        let expected =
-            (1u64 << 19) | (1u64 << 26) | (1u64 << 37) | (1u64 << 44); // the 4 opening moves
+        let expected = (1u64 << 19) | (1u64 << 26) | (1u64 << 37) | (1u64 << 44); // the 4 opening moves
         assert_eq!(legal_moves(b.0, b.1), expected);
         assert_eq!(legal_moves(b.0, b.1), legal_moves_ref(b.0, b.1));
     }

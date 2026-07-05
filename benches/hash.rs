@@ -5,8 +5,8 @@
 //! Run with: `cargo bench --bench hash`
 //! (declared with `harness = false`, so this is a plain `main`).
 
-use std::collections::HashMap;
 use std::collections::hash_map::RandomState;
+use std::collections::HashMap;
 use std::hash::BuildHasher;
 use std::hint::black_box;
 use std::time::Instant;

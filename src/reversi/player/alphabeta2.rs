@@ -25,8 +25,7 @@ const ENDGAME_EMPTIES: u32 = 10;
 const INF: i32 = 100_000_000;
 
 // The four corner cells, tried first during move ordering.
-const CORNERS: Mask =
-    0b_10000001_00000000_00000000_00000000_00000000_00000000_00000000_10000001;
+const CORNERS: Mask = 0b_10000001_00000000_00000000_00000000_00000000_00000000_00000000_10000001;
 
 // Files A (leftmost) and H (rightmost) columns. Used to stop horizontal bit
 // shifts from wrapping around row boundaries when smearing into neighbours.
@@ -418,7 +417,14 @@ impl Player for AlphaBeta2Player {
                 let score = if endgame {
                     -Self::solve(&reversed.switch(), -INF, -alpha, false, &mut solve_tt)
                 } else {
-                    -Self::search(&reversed.switch(), -INF, -alpha, SEARCH_DEPTH, false, &mut search_tt)
+                    -Self::search(
+                        &reversed.switch(),
+                        -INF,
+                        -alpha,
+                        SEARCH_DEPTH,
+                        false,
+                        &mut search_tt,
+                    )
                 };
                 if score > alpha {
                     alpha = score;
@@ -488,9 +494,7 @@ mod tests {
         } else {
             (Winner::White, GameManager::new(rand(), ab()))
         };
-        gm.verbose = false;
-        gm.playout();
-        let result = gm.result.as_ref().expect("game must be finished");
+        let result = gm.playout();
         if std::mem::discriminant(&result.winner) == std::mem::discriminant(&expected) {
             Ok(())
         } else {
@@ -499,9 +503,8 @@ mod tests {
     }
 
     fn assert_dominates(ab_is_black: bool) {
-        let threads = std::thread::available_parallelism()
-            .map(|n| (n.get() - 1).max(1))
-            .unwrap_or(1);
+        let threads =
+            std::thread::available_parallelism().map(|n| (n.get() - 1).max(1)).unwrap_or(1);
         let per_thread: Vec<Vec<(u32, Winner, (u32, u32))>> = std::thread::scope(|s| {
             let handles: Vec<_> = (0..threads)
                 .map(|t| {

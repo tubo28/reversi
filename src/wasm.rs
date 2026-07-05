@@ -82,7 +82,8 @@ pub extern "C" fn ai_move(black: u64, white: u64, seed: u32) -> u64 {
 /// mover's perspective, so the human should be set up as the side to move.
 #[no_mangle]
 pub extern "C" fn generate_endgame(seed: u32, target_empties: u32) -> u64 {
-    let result = generate_win_position(seed, target_empties, GEN_BUDGET, SOLVE_BUDGET, MAX_ATTEMPTS);
+    let result =
+        generate_win_position(seed, target_empties, GEN_BUDGET, SOLVE_BUDGET, MAX_ATTEMPTS);
     GENERATED.with(|cell| {
         *cell.borrow_mut() = result.as_ref().map(|w| (w.me, w.opp, w.margin));
     });

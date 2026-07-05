@@ -123,9 +123,8 @@ mod tests {
         assert_ne!(legal_moves(win.me, win.opp), 0);
         // The reported margin must be an independently reproducible, completed win.
         let mut solver = AlphaBeta5Player::with_budget(1, SOLVE_BUDGET);
-        let exact = solver
-            .solve_exact(&Board(win.me, win.opp))
-            .expect("verification solve must complete");
+        let exact =
+            solver.solve_exact(&Board(win.me, win.opp)).expect("verification solve must complete");
         assert!(exact > 0, "returned position must be a forced win, got {exact}");
         assert_eq!(exact, win.margin);
         // And it is at the requested depth.

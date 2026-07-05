@@ -21,8 +21,7 @@ const INF: i32 = 100_000_000;
 
 // The four corner cells. Capturing a corner is almost always good, so moves that
 // land on a corner are tried first during move ordering.
-const CORNERS: Mask =
-    0b_10000001_00000000_00000000_00000000_00000000_00000000_00000000_10000001;
+const CORNERS: Mask = 0b_10000001_00000000_00000000_00000000_00000000_00000000_00000000_10000001;
 
 /// Kind of value stored in a transposition table entry, w.r.t. the search window
 /// it was produced with.
@@ -335,7 +334,14 @@ impl Player for AlphaBetaSearchPlayer {
                 let score = if endgame {
                     -Self::solve(&revered.switch(), -INF, -alpha, false, &mut solve_tt)
                 } else {
-                    -Self::search(&revered.switch(), -INF, -alpha, SEARCH_DEPTH, false, &mut search_tt)
+                    -Self::search(
+                        &revered.switch(),
+                        -INF,
+                        -alpha,
+                        SEARCH_DEPTH,
+                        false,
+                        &mut search_tt,
+                    )
                 };
                 if score > alpha {
                     alpha = score;
@@ -377,10 +383,7 @@ mod tests {
         } else {
             (Winner::White, GameManager::new(rand(), ab()))
         };
-        gm.verbose = false;
-        gm.playout();
-
-        let result = gm.result.as_ref().expect("game must be finished");
+        let result = gm.playout();
         if std::mem::discriminant(&result.winner) == std::mem::discriminant(&expected) {
             Ok(())
         } else {
@@ -396,9 +399,8 @@ mod tests {
     // serially.
     fn assert_alpha_beta_dominates(alpha_beta_is_black: bool) {
         // Leave one CPU free (but always use at least one thread).
-        let threads = std::thread::available_parallelism()
-            .map(|n| (n.get() - 1).max(1))
-            .unwrap_or(1);
+        let threads =
+            std::thread::available_parallelism().map(|n| (n.get() - 1).max(1)).unwrap_or(1);
         // Each thread handles a strided subset of the seeds (thread t: t, t+threads, ...).
         let per_thread: Vec<Vec<(u32, Winner, (u32, u32))>> = std::thread::scope(|s| {
             let handles: Vec<_> = (0..threads)
