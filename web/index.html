@@ -6,37 +6,7 @@
   <title>Reversi</title>
 </head>
 <body>
-  <main class="app">
-    <div class="controls">
-      <button id="new-black" type="button">New Game (Black)</button>
-      <button id="new-white" type="button">New Game (White)</button>
-    </div>
-
-    <div class="controls">
-      <select id="sprint-empties" aria-label="Sprint difficulty">
-        <option value="12">Empties 12 (easy)</option>
-        <option value="14" selected>Empties 14</option>
-        <option value="16">Empties 16 (hard)</option>
-      </select>
-      <button id="new-sprint" type="button">必勝局面を生成</button>
-    </div>
-
-    <div class="scores">
-      <span class="score">
-        <span class="disk black"></span>
-        <span id="black-count">2</span>
-      </span>
-      <span class="score">
-        <span class="disk white"></span>
-        <span id="white-count">2</span>
-      </span>
-    </div>
-
-    <div id="board" class="board" aria-label="Board"></div>
-
-    <p id="status" class="status">Loading…</p>
-  </main>
-
-  <script type="module" src="/src/index.ts"></script>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>
