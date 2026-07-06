@@ -1,14 +1,14 @@
 import { useEffect, useReducer, useRef, useState } from "react";
 import { bitAt } from "../game/bits";
 import { sideToMove, reversiReducer, type GameAction } from "../game/reducer";
-import { initialGameState, type GameState, type Side } from "../game/types";
+import { initialGameState, type GameState, type Turn } from "../game/types";
 import { loadReversiWasm, type ReversiApi } from "../wasm/reversiWasm";
 
 export interface UseReversiGame {
   state: GameState;
   loadError: string | null;
   onHumanMove(index: number): void;
-  newGame(color: Side): void;
+  newGame(color: Turn): void;
   newSprint(targetEmpties: number): void;
 }
 
@@ -90,7 +90,7 @@ export function useReversiGame(providedApi?: ReversiApi): UseReversiGame {
     runStep();
   }
 
-  function newGame(color: Side): void {
+  function newGame(color: Turn): void {
     clearPending();
     applyAction({ type: "NEW_GAME", color });
     runStep();

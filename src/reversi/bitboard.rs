@@ -12,7 +12,7 @@ pub type Mask = u64;
 pub struct Board(pub Mask, pub Mask); // black, white
 
 /// Vestigial: this used to carry the per-rotation partial masks consumed by the
-/// old rotation-based flip. The flip is now computed directly (see `flip_discs`),
+/// old rotation-based flip. The flip is now computed directly (see `flip_disks`),
 /// so `get_valid_mask` returns a dummy of this type and `flip_with_hints` ignores
 /// it. Kept only so existing callers threading it through still compile.
 type ValidMaskParts = [(Mask, Mask); 4];
@@ -60,7 +60,7 @@ impl Board {
     /// are flipped.
     #[inline]
     pub fn flip(&self, mov: Mask) -> Board {
-        let flip = flip_discs(self.0, self.1, mov);
+        let flip = flip_disks(self.0, self.1, mov);
         Board(self.0 | mov | flip, self.1 ^ flip)
     }
 
@@ -79,8 +79,8 @@ const NOT_EDGE_HORIZ: Mask = 0x7e7e7e7e7e7e7e7e;
 /// Legal moves for black (black to move), computed with a branchless
 /// 8-direction parallel-prefix ("smear") fill — no board rotation, no closures.
 ///
-/// For each direction we walk up to six opponent discs starting from our own
-/// discs (`t`), then a legal move is an empty cell one step beyond that run.
+/// For each direction we walk up to six opponent disks starting from our own
+/// disks (`t`), then a legal move is an empty cell one step beyond that run.
 /// The `<<`/`>>` shift amount encodes the direction on the `row*8 + col` layout
 /// (±1 = E/W, ±8 = N/S, ±9 = NW/SE, ±7 = NE/SW); the propagator is the interior
 /// `white` for horizontal-crossing directions and the full `white` for vertical.
@@ -113,13 +113,13 @@ pub fn legal_moves(black: Mask, white: Mask) -> Mask {
         | dir!(h, >>, 7) // NE
 }
 
-/// White discs flipped when black plays at `mov` (which must be a single empty
+/// White disks flipped when black plays at `mov` (which must be a single empty
 /// cell). Same 8-direction smear as `legal_moves`, but here each direction keeps
-/// the opponent run `t` iff the cell beyond it is one of our own discs (`black`),
+/// the opponent run `t` iff the cell beyond it is one of our own disks (`black`),
 /// i.e. the run is flanked. Branchless: the run is masked in or out by whether a
-/// flanking disc exists. No `dyn` dispatch, no data-dependent loop.
+/// flanking disk exists. No `dyn` dispatch, no data-dependent loop.
 #[inline]
-pub fn flip_discs(black: Mask, white: Mask, mov: Mask) -> Mask {
+pub fn flip_disks(black: Mask, white: Mask, mov: Mask) -> Mask {
     let h = white & NOT_EDGE_HORIZ;
     let v = white;
 
@@ -132,7 +132,7 @@ pub fn flip_discs(black: Mask, white: Mask, mov: Mask) -> Mask {
             t |= p & (t $op $s);
             t |= p & (t $op $s);
             t |= p & (t $op $s);
-            // Keep the whole run only if it is flanked by one of our own discs.
+            // Keep the whole run only if it is flanked by one of our own disks.
             let flanked = ((t $op $s) & black != 0) as u64;
             t & flanked.wrapping_neg()
         }};
@@ -229,7 +229,7 @@ mod tests {
         moves
     }
 
-    /// Obvious-by-inspection scalar oracle for the discs flipped when black plays
+    /// Obvious-by-inspection scalar oracle for the disks flipped when black plays
     /// at `mov` (a single empty cell).
     fn flip_ref(black: Mask, white: Mask, mov: Mask) -> Mask {
         let idx = mov.trailing_zeros() as i32;
@@ -297,7 +297,7 @@ mod tests {
                 let mut m = moves;
                 while m != 0 {
                     let mov = m & m.wrapping_neg();
-                    let flip = flip_discs(board.0, board.1, mov);
+                    let flip = flip_disks(board.0, board.1, mov);
                     assert_eq!(flip, flip_ref(board.0, board.1, mov), "flip vs oracle");
                     choices.push(mov);
                     m &= m - 1;

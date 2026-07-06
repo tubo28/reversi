@@ -4,11 +4,12 @@ import {
   label,
   other,
   type GameState,
-  type Side,
+  type Turn,
+  type Winner,
 } from "./types";
 
 export type GameAction =
-  | { type: "NEW_GAME"; color: Side }
+  | { type: "NEW_GAME"; color: Turn }
   | { type: "APPLY_HUMAN_MOVE"; index: number; flip: bigint }
   | { type: "APPLY_AI_MOVE"; bit: bigint; flip: bigint }
   | { type: "PASS" }
@@ -86,17 +87,17 @@ export function reversiReducer(
     case "FINISH": {
       const b = popcount(state.black);
       const w = popcount(state.white);
-      const humanCount = state.humanColor === "black" ? b : w;
-      const aiCount = state.humanColor === "black" ? w : b;
+      const winner: Winner = b > w ? "black" : b < w ? "white" : "draw";
       const result =
-        humanCount > aiCount
-          ? "You win! 🎉"
-          : humanCount < aiCount
-            ? "AI wins"
-            : "Draw";
+        winner === "draw"
+          ? "Draw"
+          : winner === state.humanColor
+            ? "You win! 🎉"
+            : "AI wins";
       return {
         ...state,
         gameOver: true,
+        winner,
         status: `Game over — ${result} (Black ${b} : White ${w})`,
       };
     }
@@ -116,6 +117,7 @@ export function reversiReducer(
         ...state,
         busy: true,
         gameOver: false,
+        winner: null,
         lastMove: -1,
         status: "Generating…",
       };
@@ -136,6 +138,7 @@ export function reversiReducer(
         humanColor: "black",
         busy: false,
         gameOver: false,
+        winner: null,
         lastMove: -1,
         legalMoves: action.legalMoves,
         status: `Your turn (${label("black")})\nTHIS IS A WINNING POSITION. MAKE OPTIMAL MOVES TO WIN.`,

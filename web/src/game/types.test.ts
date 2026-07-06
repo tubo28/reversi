@@ -42,6 +42,7 @@ describe("initialGameState", () => {
     expect(state.black).toBe(START_BLACK);
     expect(state.white).toBe(START_WHITE);
     expect(state.gameOver).toBe(false);
+    expect(state.winner).toBeNull();
     expect(state.busy).toBe(false);
     expect(state.lastMove).toBe(-1);
   });

@@ -12,8 +12,8 @@ use std::collections::HashMap;
 ///    table shared across the deepening iterations, so alpha-beta actually prunes
 ///    at the root (AB3 searched root moves in shuffled order from -INF),
 ///  - a potential-mobility evaluation term (empty cells adjacent to the
-///    opponent's discs — squares where future moves may appear),
-///  - an exact endgame solver that maximises the final *disc difference* instead
+///    opponent's disks — squares where future moves may appear),
+///  - an exact endgame solver that maximises the final *disk difference* instead
 ///    of only the win/loss/draw sign, entered a few plies earlier.
 ///
 /// It is intentionally a separate `Player` so it can be measured head-to-head
@@ -29,7 +29,7 @@ pub struct AlphaBeta4Player {
 const SEARCH_DEPTH: usize = 9;
 
 // When this few empty cells remain, switch to the exact endgame solver. Deeper
-// than AB3's 12 — the disc-differential solver below still prunes hard enough
+// than AB3's 12 — the disk-differential solver below still prunes hard enough
 // (and the faster root search leaves budget for it).
 const ENDGAME_EMPTIES: u32 = 16;
 
@@ -81,16 +81,16 @@ pub struct Weights {
     /// Current mobility: difference in the number of legal moves available now.
     pub mob: i32,
     /// Potential mobility: difference in empty cells adjacent to the opponent's
-    /// discs — squares where future moves may appear. See `potential_mobility`.
+    /// disks — squares where future moves may appear. See `potential_mobility`.
     pub pmob: i32,
-    /// Frontier: difference in discs adjacent to an empty cell (fewer is better,
+    /// Frontier: difference in disks adjacent to an empty cell (fewer is better,
     /// so the term is white − black). See `frontier_counts`.
     pub front: i32,
-    /// Stability: difference in discs that can never be flipped. See `stable_full`.
+    /// Stability: difference in disks that can never be flipped. See `stable_full`.
     pub stab: i32,
-    /// Raw disc count difference. Only matters near the end (kept at 0 until the
+    /// Raw disk count difference. Only matters near the end (kept at 0 until the
     /// endgame phase).
-    pub disc: i32,
+    pub disk: i32,
 }
 
 /// The three per-phase weight sets, selected by remaining empty cells. Injectable
@@ -108,12 +108,12 @@ impl Default for PhaseWeights {
         // potential-mobility term (`pmob`) seeded as a weaker mirror of current
         // mobility. `pmob` still wants confirming/tuning against AB3 in the duel.
         PhaseWeights {
-            // Opening: mobility and frontier dominate; raw disc count is irrelevant.
-            opening: Weights { pos: 100, mob: 20, pmob: 15, front: 35, stab: 40, disc: 0 },
+            // Opening: mobility and frontier dominate; raw disk count is irrelevant.
+            opening: Weights { pos: 100, mob: 20, pmob: 15, front: 35, stab: 40, disk: 0 },
             // Midgame: positional table and stability lead, mobility still matters.
-            midgame: Weights { pos: 100, mob: 15, pmob: 10, front: 25, stab: 70, disc: 0 },
-            // Late: stability and disc count dominate, mobility fades.
-            endgame: Weights { pos: 80, mob: 5, pmob: 3, front: 10, stab: 100, disc: 12 },
+            midgame: Weights { pos: 100, mob: 15, pmob: 10, front: 25, stab: 70, disk: 0 },
+            // Late: stability and disk count dominate, mobility fades.
+            endgame: Weights { pos: 80, mob: 5, pmob: 3, front: 10, stab: 100, disk: 12 },
         }
     }
 }
@@ -253,8 +253,8 @@ impl AlphaBeta4Player {
     }
 
     /// Exact endgame solver, also using PVS. Unlike AB3's win/loss/draw-only
-    /// solver this returns the exact final *disc difference* (my discs − opp
-    /// discs), so it plays for the widest possible margin, not just any win.
+    /// solver this returns the exact final *disk difference* (my disks − opp
+    /// disks), so it plays for the widest possible margin, not just any win.
     fn solve(board: &Board, alpha: i32, beta: i32, passed: bool, tt: &mut SolveTt) -> i32 {
         debug_assert!(alpha <= beta);
         let (my_moves, parts) = board.get_valid_mask();
@@ -360,8 +360,8 @@ impl AlphaBeta4Player {
             | ((disks >> 7) & NOT_FILE_A)
     }
 
-    /// Counts frontier discs (discs adjacent to at least one empty cell) for
-    /// black and white. Frontier discs are usually a liability.
+    /// Counts frontier disks (disks adjacent to at least one empty cell) for
+    /// black and white. Frontier disks are usually a liability.
     #[inline]
     fn frontier_counts(board: &Board) -> (u32, u32) {
         let Board(black, white) = *board;
@@ -371,7 +371,7 @@ impl AlphaBeta4Player {
     }
 
     /// Potential mobility for black and white: the number of empty cells adjacent
-    /// to the *opponent's* discs — squares where each side may gain future moves.
+    /// to the *opponent's* disks — squares where each side may gain future moves.
     /// A cheap, well-known complement to current mobility.
     #[inline]
     fn potential_mobility(board: &Board) -> (u32, u32) {
@@ -382,11 +382,11 @@ impl AlphaBeta4Player {
         (black_pmob, white_pmob)
     }
 
-    /// Flood-fill stable-disc count for black and white. A disc is stable when it
+    /// Flood-fill stable-disk count for black and white. A disk is stable when it
     /// can never be flipped: along each of the four axes (horizontal, vertical,
     /// and the two diagonals) it is either on the board edge for that axis, part
-    /// of a completely filled line, or flanked by an already-stable same-coloured
-    /// disc. Seeded by the corners, iterated to a fixpoint. This is a much tighter
+    /// of a completely filled line, or flanked by an already-stable same-colored
+    /// disk. Seeded by the corners, iterated to a fixpoint. This is a much tighter
     /// estimate than the old corner-anchored edge-run lower bound.
     #[inline]
     fn stable_full(board: &Board) -> (u32, u32) {
@@ -483,14 +483,14 @@ impl AlphaBeta4Player {
         let (bs, ws) = Self::stable_full(board);
         let stabdiff = bs as i32 - ws as i32;
 
-        let discdiff = black.count_ones() as i32 - white.count_ones() as i32;
+        let diskdiff = black.count_ones() as i32 - white.count_ones() as i32;
 
         wt.pos * posdiff
             + wt.mob * mobdiff
             + wt.pmob * pmobdiff
             + wt.front * frontdiff
             + wt.stab * stabdiff
-            + wt.disc * discdiff
+            + wt.disk * diskdiff
     }
 }
 
@@ -514,7 +514,7 @@ impl Player for AlphaBeta4Player {
         let (black, white) = board.count();
         let empties = (H * W) as u32 - black - white;
 
-        // Endgame: one exact, disc-differential pass (no iterative deepening).
+        // Endgame: one exact, disk-differential pass (no iterative deepening).
         if empties <= ENDGAME_EMPTIES {
             let mut solve_tt = SolveTt::default();
             let mut alpha = -INF;
@@ -586,7 +586,7 @@ mod tests {
     #[test]
     fn potential_mobility_initial_board_symmetric() {
         // The initial position is symmetric under a 180° rotation that swaps
-        // colours, so both sides must have equal (and non-zero) potential mobility.
+        // colors, so both sides must have equal (and non-zero) potential mobility.
         let (b, w) = AlphaBeta4Player::potential_mobility(&Board::new());
         assert_eq!(b, w);
         assert!(b > 0);
@@ -614,7 +614,7 @@ mod tests {
 
     #[test]
     fn stable_full_full_board_all_stable() {
-        // A completely filled board: every disc is stable (no empty to flip into).
+        // A completely filled board: every disk is stable (no empty to flip into).
         let board = Board(u64::MAX, 0);
         assert_eq!(AlphaBeta4Player::stable_full(&board), (64, 0));
     }

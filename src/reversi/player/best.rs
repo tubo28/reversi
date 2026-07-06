@@ -1,7 +1,4 @@
-//! The engine's current strongest AI, exposed behind a stable name so callers
-//! (notably the WebAssembly API in `src/wasm.rs`) don't depend on which concrete
-//! search engine is currently "best". To promote a new engine, change only the
-//! wrapped type / delegation in this file.
+//! The current strongest AI.
 use crate::reversi::bitboard;
 use crate::reversi::player::alphabeta5::AlphaBeta5Player;
 use crate::reversi::player::Player;

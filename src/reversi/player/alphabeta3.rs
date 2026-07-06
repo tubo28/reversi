@@ -7,13 +7,13 @@ use std::collections::HashMap;
 
 /// Player by alpha-beta search, evolved from `AlphaBeta2Player`. It keeps the
 /// enhanced phase-dependent evaluation (positional + mobility + frontier +
-/// stable + disc) but strengthens the *search* itself:
+/// stable + disk) but strengthens the *search* itself:
 ///  - a fast, dependency-free transposition-table hasher (`FxBuildHasher`)
 ///    instead of the default SipHash (~3x faster probes, see `benches/hash.rs`),
 ///  - principal-variation search (PVS / NegaScout) for tighter pruning,
 ///  - a deeper nominal depth and a wider exact-endgame window, paid for by the
 ///    speedups above,
-///  - a proper flood-fill stable-disc count instead of the old corner-anchored
+///  - a proper flood-fill stable-disk count instead of the old corner-anchored
 ///    lower bound.
 ///
 /// It is intentionally a separate `Player` so it can be measured head-to-head
@@ -79,7 +79,7 @@ pub struct Weights {
     pub mob: i32,
     pub front: i32,
     pub stab: i32,
-    pub disc: i32,
+    pub disk: i32,
 }
 
 /// The three per-phase weight sets, selected by remaining empty cells. Injectable
@@ -94,15 +94,15 @@ pub struct PhaseWeights {
 impl Default for PhaseWeights {
     fn default() -> Self {
         // Tuned by `benches/tune.rs` vs the baseline Alpha-Beta (the "more-stability"
-        // candidate): heavily up-weighting the flood-fill stable-disc term — AB3's
+        // candidate): heavily up-weighting the flood-fill stable-disk term — AB3's
         // genuine advantage over AB2 — turned a near-even record into a 24-0 sweep.
         PhaseWeights {
-            // Opening: mobility and frontier dominate; raw disc count is irrelevant.
-            opening: Weights { pos: 100, mob: 20, front: 35, stab: 40, disc: 0 },
+            // Opening: mobility and frontier dominate; raw disk count is irrelevant.
+            opening: Weights { pos: 100, mob: 20, front: 35, stab: 40, disk: 0 },
             // Midgame: positional table and stability lead, mobility still matters.
-            midgame: Weights { pos: 100, mob: 15, front: 25, stab: 70, disc: 0 },
-            // Late: stability and disc count dominate, mobility fades.
-            endgame: Weights { pos: 80, mob: 5, front: 10, stab: 100, disc: 12 },
+            midgame: Weights { pos: 100, mob: 15, front: 25, stab: 70, disk: 0 },
+            // Late: stability and disk count dominate, mobility fades.
+            endgame: Weights { pos: 80, mob: 5, front: 10, stab: 100, disk: 12 },
         }
     }
 }
@@ -333,8 +333,8 @@ impl AlphaBeta3Player {
         w
     }
 
-    /// Counts frontier discs (discs adjacent to at least one empty cell) for
-    /// black and white. Frontier discs are usually a liability.
+    /// Counts frontier disks (disks adjacent to at least one empty cell) for
+    /// black and white. Frontier disks are usually a liability.
     #[inline]
     fn frontier_counts(board: &Board) -> (u32, u32) {
         let Board(black, white) = *board;
@@ -350,11 +350,11 @@ impl AlphaBeta3Player {
         ((black & neighbours).count_ones(), (white & neighbours).count_ones())
     }
 
-    /// Flood-fill stable-disc count for black and white. A disc is stable when it
+    /// Flood-fill stable-disk count for black and white. A disk is stable when it
     /// can never be flipped: along each of the four axes (horizontal, vertical,
     /// and the two diagonals) it is either on the board edge for that axis, part
-    /// of a completely filled line, or flanked by an already-stable same-coloured
-    /// disc. Seeded by the corners, iterated to a fixpoint. This is a much tighter
+    /// of a completely filled line, or flanked by an already-stable same-colored
+    /// disk. Seeded by the corners, iterated to a fixpoint. This is a much tighter
     /// estimate than the old corner-anchored edge-run lower bound.
     #[inline]
     fn stable_full(board: &Board) -> (u32, u32) {
@@ -448,13 +448,13 @@ impl AlphaBeta3Player {
         let (bs, ws) = Self::stable_full(board);
         let stabdiff = bs as i32 - ws as i32;
 
-        let discdiff = black.count_ones() as i32 - white.count_ones() as i32;
+        let diskdiff = black.count_ones() as i32 - white.count_ones() as i32;
 
         wt.pos * posdiff
             + wt.mob * mobdiff
             + wt.front * frontdiff
             + wt.stab * stabdiff
-            + wt.disc * discdiff
+            + wt.disk * diskdiff
     }
 }
 
@@ -547,7 +547,7 @@ mod tests {
 
     #[test]
     fn stable_full_full_board_all_stable() {
-        // A completely filled board: every disc is stable (no empty to flip into).
+        // A completely filled board: every disk is stable (no empty to flip into).
         let board = Board(u64::MAX, 0);
         assert_eq!(AlphaBeta3Player::stable_full(&board), (64, 0));
     }

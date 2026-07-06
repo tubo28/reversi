@@ -48,12 +48,8 @@ pub struct GameResult {
     pub disks: (u32, u32),
 }
 
-// ---------------------------------------------------------------------------
-// Pure game logic (no state, no side effects).
-// ---------------------------------------------------------------------------
-
 /// The board as seen by the player to move: routines always assume black is to
-/// move, so white plays on the colour-swapped board.
+/// move, so white plays on the color-swapped board.
 fn perspective(board: &Board, turn: Turn) -> Board {
     match turn {
         Turn::Black => board.clone(),
@@ -87,10 +83,8 @@ fn finalize(board: &Board) -> GameResult {
     GameResult { winner: winner_of(board), board: board.clone(), disks: board.count() }
 }
 
-// ---------------------------------------------------------------------------
-// Game driver (the only stateful part is the players themselves).
-// ---------------------------------------------------------------------------
-
+/// A game manager that runs a match between two players,
+/// folding the board state and turn management.
 pub struct GameManager {
     black: Box<dyn Player>,
     white: Box<dyn Player>,
@@ -148,10 +142,8 @@ impl GameManager {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Side effects (stdout) are isolated here.
-// ---------------------------------------------------------------------------
 
+/// Verbose reporter of game progress and result to stdout.
 struct Reporter {
     black: &'static str,
     white: &'static str,
@@ -171,7 +163,7 @@ impl Reporter {
 
     // Reports the move (or pass) `turn` just made, followed by the score line.
     fn ply(&self, turn: Turn, mov: Option<Mask>, board: &Board) {
-        let colour = match turn {
+        let color = match turn {
             Turn::Black => "black",
             Turn::White => "white",
         };
@@ -180,12 +172,12 @@ impl Reporter {
                 let (r, c) = coordinate(mov);
                 println!(
                     "{} ({}) chooses {}.",
-                    colour,
+                    color,
                     self.name(turn),
                     util::position_to_name(r, c)
                 );
             }
-            None => println!("{} ({}) passed.", colour, self.name(turn)),
+            None => println!("{} ({}) passed.", color, self.name(turn)),
         }
 
         let (black, white) = board.count();
@@ -219,7 +211,7 @@ mod tests {
     #[test]
     fn play_move_black_opening() {
         // From the opening, black plays cell (2, 3) = bit 19, one of the four
-        // legal openings, flipping a single white disc.
+        // legal openings, flipping a single white disk.
         let board = play_move(&Board::new(), Turn::Black, Some(1 << 19));
         assert_eq!(board.count(), (4, 1));
     }
@@ -234,7 +226,7 @@ mod tests {
     #[test]
     fn play_move_white_perspective() {
         // Black opens, then white replies from its swapped perspective; the move
-        // count must grow by one each ply (opening flips only a single disc).
+        // count must grow by one each ply (opening flips only a single disk).
         let after_black = play_move(&Board::new(), Turn::Black, Some(1 << 19));
         assert_eq!(after_black.count(), (4, 1));
 
@@ -246,12 +238,12 @@ mod tests {
 
         let after_white = play_move(&after_black, Turn::White, Some(mov));
         let (b, w) = after_white.count();
-        assert_eq!(b + w, 6, "one white placement plus its flips add exactly one net disc");
+        assert_eq!(b + w, 6, "one white placement plus its flips add exactly one net disk");
     }
 
     #[test]
     fn winner_of_reads_majority() {
-        // Two black discs, one white disc.
+        // Two black disks, one white disk.
         assert_eq!(winner_of(&Board(0b11, 0b100)), Winner::Black);
         assert_eq!(winner_of(&Board(0b100, 0b11)), Winner::White);
         assert_eq!(winner_of(&Board(0b1, 0b10)), Winner::Draw);

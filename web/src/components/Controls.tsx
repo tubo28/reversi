@@ -1,10 +1,10 @@
-import type { Side } from "../game/types";
+import type { Turn } from "../game/types";
 
 const SPRINT_EMPTIES = 14;
 
 export interface ControlsProps {
   disabled: boolean;
-  onNewGame: (color: Side) => void;
+  onNewGame: (color: Turn) => void;
   onNewSprint: (targetEmpties: number) => void;
 }
 

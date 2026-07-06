@@ -4,7 +4,7 @@
 //! `AlphaBeta5` plays itself from the opening down to a target number of empty
 //! cells, then the exact endgame solver ([`AlphaBeta5Player::solve_exact`]) is
 //! run from the resulting position. If the side to move has a *proven* forced win
-//! (exact final disc difference > 0), that position is returned; the human then
+//! (exact final disk difference > 0), that position is returned; the human then
 //! plays it out from their (winning) turn against the engine.
 //!
 //! The board is kept in the engine's usual "side to move is `board.0`"
@@ -17,7 +17,7 @@ use crate::reversi::player::alphabeta5::AlphaBeta5Player;
 use crate::reversi::player::Player;
 
 /// A position where the side to move (`me`) has a proven forced win by `margin`
-/// discs under perfect play. `me`/`opp` are raw bitmasks from the mover's
+/// disks under perfect play. `me`/`opp` are raw bitmasks from the mover's
 /// perspective (`me` = side to move).
 pub struct WinPosition {
     pub me: u64,

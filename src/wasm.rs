@@ -106,7 +106,7 @@ pub extern "C" fn generated_white() -> u64 {
     GENERATED.with(|cell| cell.borrow().map(|(_, opp, _)| opp).unwrap_or(0))
 }
 
-/// The proven forced-win margin (final disc difference) of the last successful
+/// The proven forced-win margin (final disk difference) of the last successful
 /// [`generate_endgame`]; positive on success. Returned as `u64` per the C ABI.
 #[no_mangle]
 pub extern "C" fn generated_margin() -> u64 {

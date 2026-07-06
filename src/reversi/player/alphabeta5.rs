@@ -125,7 +125,7 @@ pub struct Weights {
     pub pmob: i32,
     pub front: i32,
     pub stab: i32,
-    pub disc: i32,
+    pub disk: i32,
 }
 
 /// The three per-phase weight sets, selected by remaining empty cells.
@@ -153,9 +153,9 @@ impl PhaseWeights {
 /// defaults). See `alphabeta42.rs` for the tuning history.
 fn tuned_weights() -> PhaseWeights {
     PhaseWeights {
-        opening: Weights { pos: 140, mob: 20, pmob: 20, front: 35, stab: 40, disc: 0 },
-        midgame: Weights { pos: 140, mob: 15, pmob: 20, front: 25, stab: 70, disc: 0 },
-        endgame: Weights { pos: 110, mob: 5, pmob: 10, front: 10, stab: 100, disc: 12 },
+        opening: Weights { pos: 140, mob: 20, pmob: 20, front: 35, stab: 40, disk: 0 },
+        midgame: Weights { pos: 140, mob: 15, pmob: 20, front: 25, stab: 70, disk: 0 },
+        endgame: Weights { pos: 110, mob: 5, pmob: 10, front: 10, stab: 100, disk: 12 },
     }
 }
 
@@ -396,7 +396,7 @@ impl AlphaBeta5Player {
         n
     }
 
-    /// Exact endgame result for the side to move (`board.0`): the final disc
+    /// Exact endgame result for the side to move (`board.0`): the final disk
     /// difference (me − opp) under perfect play by both sides, or `None` if the
     /// node budget ran out before the exact tree was exhausted. A positive value
     /// is a *proven* forced win. Only affordable at low empty counts; used by the
@@ -413,8 +413,8 @@ impl AlphaBeta5Player {
         }
     }
 
-    /// Exact endgame solver (PVS), returning the exact final *disc difference*
-    /// (my discs − opp discs). Budget-guarded like `search`.
+    /// Exact endgame solver (PVS), returning the exact final *disk difference*
+    /// (my disks − opp disks). Budget-guarded like `search`.
     fn solve(&mut self, board: &Board, alpha: i32, beta: i32, passed: bool) -> i32 {
         if self.aborted {
             return 0;
@@ -560,8 +560,8 @@ impl AlphaBeta5Player {
             | ((disks >> 7) & NOT_FILE_A)
     }
 
-    /// Counts frontier discs (discs adjacent to at least one empty cell) for
-    /// black and white. Frontier discs are usually a liability.
+    /// Counts frontier disks (disks adjacent to at least one empty cell) for
+    /// black and white. Frontier disks are usually a liability.
     #[inline]
     fn frontier_counts(board: &Board) -> (u32, u32) {
         let Board(black, white) = *board;
@@ -571,7 +571,7 @@ impl AlphaBeta5Player {
     }
 
     /// Potential mobility for black and white: the number of empty cells adjacent
-    /// to the *opponent's* discs — squares where each side may gain future moves.
+    /// to the *opponent's* disks — squares where each side may gain future moves.
     #[inline]
     fn potential_mobility(board: &Board) -> (u32, u32) {
         let Board(black, white) = *board;
@@ -581,10 +581,10 @@ impl AlphaBeta5Player {
         (black_pmob, white_pmob)
     }
 
-    /// Flood-fill stable-disc count for black and white. A disc is stable when it
+    /// Flood-fill stable-disk count for black and white. A disk is stable when it
     /// can never be flipped: along each of the four axes it is either on the
     /// board edge for that axis, part of a completely filled line, or flanked by
-    /// an already-stable same-coloured disc. Iterated to a fixpoint.
+    /// an already-stable same-colored disk. Iterated to a fixpoint.
     #[inline]
     fn stable_full(board: &Board) -> (u32, u32) {
         let Board(black, white) = *board;
@@ -675,14 +675,14 @@ impl AlphaBeta5Player {
         let (bs, ws) = Self::stable_full(board);
         let stabdiff = bs as i32 - ws as i32;
 
-        let discdiff = black.count_ones() as i32 - white.count_ones() as i32;
+        let diskdiff = black.count_ones() as i32 - white.count_ones() as i32;
 
         wt.pos * posdiff
             + wt.mob * mobdiff
             + wt.pmob * pmobdiff
             + wt.front * frontdiff
             + wt.stab * stabdiff
-            + wt.disc * discdiff
+            + wt.disk * diskdiff
     }
 }
 
@@ -701,7 +701,7 @@ impl Player for AlphaBeta5Player {
         // tempo-biased static evaluation, so an entry stored at one move's search
         // parity is not a valid substitute at a later move's differing parity
         // (this is why AB4 also rebuilds it each move). The solve table is safe to
-        // carry over — it stores the *exact* final disc difference, an intrinsic
+        // carry over — it stores the *exact* final disk difference, an intrinsic
         // property of the position with no depth/parity dependence — so it is only
         // cleared to bound memory in a long game.
         self.search_tt.clear();
@@ -731,7 +731,7 @@ impl Player for AlphaBeta5Player {
         self.nodes = 0;
         self.aborted = false;
 
-        // Endgame: one exact, disc-differential pass, budget-guarded. If it runs
+        // Endgame: one exact, disk-differential pass, budget-guarded. If it runs
         // out of budget we fall back to the iterative-deepening search below.
         if empties <= ENDGAME_EMPTIES {
             let mut alpha = -INF;

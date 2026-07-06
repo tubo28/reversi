@@ -129,6 +129,7 @@ describe("FINISH", () => {
     };
     const next = dispatch(state, { type: "FINISH" });
     expect(next.gameOver).toBe(true);
+    expect(next.winner).toBe("black");
     expect(next.status).toBe("Game over — You win! 🎉 (Black 3 : White 1)");
   });
 
@@ -139,6 +140,7 @@ describe("FINISH", () => {
       white: white1,
     };
     const next = dispatch(state, { type: "FINISH" });
+    expect(next.winner).toBe("black");
     expect(next.status).toBe("Game over — AI wins (Black 3 : White 1)");
   });
 
@@ -150,6 +152,7 @@ describe("FINISH", () => {
     };
     expect(popcount(state.black)).toBe(popcount(state.white));
     const next = dispatch(state, { type: "FINISH" });
+    expect(next.winner).toBe("draw");
     expect(next.status).toBe("Game over — Draw (Black 2 : White 2)");
   });
 });
@@ -181,11 +184,13 @@ describe("sprint actions", () => {
     const state: GameState = {
       ...initialGameState("black"),
       gameOver: true,
+      winner: "white",
       lastMove: 9,
     };
     const next = dispatch(state, { type: "SPRINT_STARTED" });
     expect(next.busy).toBe(true);
     expect(next.gameOver).toBe(false);
+    expect(next.winner).toBeNull();
     expect(next.lastMove).toBe(-1);
     expect(next.status).toBe("Generating…");
   });
@@ -202,6 +207,7 @@ describe("sprint actions", () => {
       ...initialGameState("white"),
       busy: true,
       gameOver: true,
+      winner: "white",
       lastMove: 4,
     };
     const next = dispatch(state, {
@@ -217,6 +223,7 @@ describe("sprint actions", () => {
     expect(next.humanColor).toBe("black");
     expect(next.busy).toBe(false);
     expect(next.gameOver).toBe(false);
+    expect(next.winner).toBeNull();
     expect(next.lastMove).toBe(-1);
     expect(next.legalMoves).toBe(bitAt(20) | bitAt(21));
     expect(next.status).toBe(

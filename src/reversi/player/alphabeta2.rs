@@ -9,7 +9,7 @@ use std::collections::HashMap;
 /// table + move ordering + exact endgame solver) is intentionally a copy of the
 /// baseline player so the two can be compared head-to-head; only `evaluate`
 /// differs. It adds three classic Othello signals on top of the positional
-/// table + mobility: frontier discs (bad), stable discs (good), and
+/// table + mobility: frontier disks (bad), stable disks (good), and
 /// phase-dependent weights (opening / midgame / endgame emphasise different
 /// things).
 pub struct AlphaBeta2Player {
@@ -67,7 +67,7 @@ struct Weights {
     mob: i32,
     front: i32,
     stab: i32,
-    disc: i32,
+    disk: i32,
 }
 
 impl AlphaBeta2Player {
@@ -252,8 +252,8 @@ impl AlphaBeta2Player {
         w
     }
 
-    /// Counts frontier discs (discs adjacent to at least one empty cell) for
-    /// black and white. Frontier discs are usually a liability: they can be
+    /// Counts frontier disks (disks adjacent to at least one empty cell) for
+    /// black and white. Frontier disks are usually a liability: they can be
     /// captured, and having many of them tends to hand the opponent mobility.
     #[inline]
     fn frontier_counts(board: &Board) -> (u32, u32) {
@@ -272,10 +272,10 @@ impl AlphaBeta2Player {
         ((black & neighbours).count_ones(), (white & neighbours).count_ones())
     }
 
-    /// Conservative (lower-bound) count of stable discs for black and white.
-    /// A disc is counted as stable if it is a corner, or lies on an edge in an
-    /// unbroken run of same-coloured discs anchored at a corner that colour
-    /// owns. Such discs can never be flipped. This underestimates stability
+    /// Conservative (lower-bound) count of stable disks for black and white.
+    /// A disk is counted as stable if it is a corner, or lies on an edge in an
+    /// unbroken run of same-colored disks anchored at a corner that color
+    /// owns. Such disks can never be flipped. This underestimates stability
     /// (it ignores interior stability) but is cheap and never over-claims.
     /// It could later be upgraded to a full 3^8 edge table.
     #[inline]
@@ -292,7 +292,7 @@ impl AlphaBeta2Player {
             edges[3][i as usize] = 1 << (i * 8 + 7); // right column
         }
 
-        // Stable cells of `color` on one edge: same-coloured runs growing inward
+        // Stable cells of `color` on one edge: same-colored runs growing inward
         // from whichever ends are corners owned by `color`.
         fn edge_stable(cells: &[Mask; 8], color: Mask) -> Mask {
             let mut stable = 0;
@@ -333,21 +333,21 @@ impl AlphaBeta2Player {
     #[inline]
     fn weights(empties: u32) -> Weights {
         if empties >= 40 {
-            // Opening: mobility and frontier dominate; raw disc count is
-            // irrelevant (leading on discs early is usually bad).
-            Weights { pos: 100, mob: 20, front: 35, stab: 25, disc: 0 }
+            // Opening: mobility and frontier dominate; raw disk count is
+            // irrelevant (leading on disks early is usually bad).
+            Weights { pos: 100, mob: 20, front: 35, stab: 25, disk: 0 }
         } else if empties >= 20 {
             // Midgame: positional table and stability lead, mobility still matters.
-            Weights { pos: 100, mob: 15, front: 25, stab: 45, disc: 0 }
+            Weights { pos: 100, mob: 15, front: 25, stab: 45, disk: 0 }
         } else {
-            // Late midgame heading into the endgame: stability and disc count
+            // Late midgame heading into the endgame: stability and disk count
             // dominate, mobility fades.
-            Weights { pos: 80, mob: 5, front: 10, stab: 70, disc: 12 }
+            Weights { pos: 80, mob: 5, front: 10, stab: 70, disk: 12 }
         }
     }
 
     /// Enhanced evaluation. Higher is better for black. Combines the positional
-    /// table, mobility, frontier discs, stable discs and (late) disc count with
+    /// table, mobility, frontier disks, stable disks and (late) disk count with
     /// phase-dependent weights.
     #[inline]
     fn evaluate(board: &Board, moves: &(Mask, Mask)) -> i32 {
@@ -371,19 +371,19 @@ impl AlphaBeta2Player {
         let mobdiff = black_moves.count_ones() as i32 - white_moves.count_ones() as i32;
 
         let (bf, wf) = Self::frontier_counts(board);
-        // Fewer frontier discs is better, so subtract our own.
+        // Fewer frontier disks is better, so subtract our own.
         let frontdiff = wf as i32 - bf as i32;
 
         let (bs, ws) = Self::stable_counts(board);
         let stabdiff = bs as i32 - ws as i32;
 
-        let discdiff = black.count_ones() as i32 - white.count_ones() as i32;
+        let diskdiff = black.count_ones() as i32 - white.count_ones() as i32;
 
         wt.pos * posdiff
             + wt.mob * mobdiff
             + wt.front * frontdiff
             + wt.stab * stabdiff
-            + wt.disc * discdiff
+            + wt.disk * diskdiff
     }
 }
 
@@ -449,8 +449,8 @@ mod tests {
 
     #[test]
     fn frontier_of_initial_board() {
-        // On the opening position the four central discs each touch an empty
-        // cell, so both sides have two frontier discs.
+        // On the opening position the four central disks each touch an empty
+        // cell, so both sides have two frontier disks.
         let (b, w) = AlphaBeta2Player::frontier_counts(&Board::new());
         assert_eq!((b, w), (2, 2));
     }
@@ -458,7 +458,7 @@ mod tests {
     #[test]
     fn stable_counts_detect_corners_only() {
         // Black holds the four corners, nothing else -> exactly four stable
-        // discs, all black; white has none.
+        // disks, all black; white has none.
         let corners = position_to_mask(0, 0)
             | position_to_mask(0, 7)
             | position_to_mask(7, 0)
@@ -469,8 +469,8 @@ mod tests {
 
     #[test]
     fn stable_counts_full_edge_from_corner() {
-        // A complete top edge owned by black is fully stable (8 discs); the
-        // opposite colour has none.
+        // A complete top edge owned by black is fully stable (8 disks); the
+        // opposite color has none.
         let mut top = 0u64;
         for c in 0..8 {
             top |= position_to_mask(0, c);
