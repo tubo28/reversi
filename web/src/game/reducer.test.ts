@@ -137,14 +137,14 @@ describe("sprint actions", () => {
     expect(next.busy).toBe(true);
     expect(next.gameOver).toBe(false);
     expect(next.lastMove).toBe(-1);
-    expect(next.status).toBe("生成中。。。");
+    expect(next.status).toBe("Generating…");
   });
 
   it("SPRINT_FAILED clears busy and shows the failure message", () => {
     const state: GameState = { ...initialGameState("black"), busy: true };
     const next = dispatch(state, { type: "SPRINT_FAILED" });
     expect(next.busy).toBe(false);
-    expect(next.status).toBe("生成に失敗しました。もう一度お試しください。");
+    expect(next.status).toBe("Generation failed. Please try again.");
   });
 
   it("SPRINT_SUCCEEDED sets the generated board and the win-margin status", () => {
@@ -154,6 +154,7 @@ describe("sprint actions", () => {
       black: bitAt(10) | bitAt(11),
       white: bitAt(12),
       margin: 6n,
+      legalMoves: bitAt(20) | bitAt(21),
     });
     expect(next.black).toBe(bitAt(10) | bitAt(11));
     expect(next.white).toBe(bitAt(12));
@@ -162,6 +163,7 @@ describe("sprint actions", () => {
     expect(next.busy).toBe(false);
     expect(next.gameOver).toBe(false);
     expect(next.lastMove).toBe(-1);
-    expect(next.status).toBe("あなたの手番です（最善で必勝・+6石）");
+    expect(next.legalMoves).toBe(bitAt(20) | bitAt(21));
+    expect(next.status).toBe("YOUR TURN (MAKE OPTIMAL MOVES)");
   });
 });

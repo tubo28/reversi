@@ -11,7 +11,7 @@ export type GameAction =
   | { type: "START_AI_THINKING" }
   | { type: "SPRINT_STARTED" }
   | { type: "SPRINT_FAILED" }
-  | { type: "SPRINT_SUCCEEDED"; black: bigint; white: bigint; margin: bigint };
+  | { type: "SPRINT_SUCCEEDED"; black: bigint; white: bigint; margin: bigint; legalMoves: bigint };
 
 // [me, opp] disks for the side to move.
 export function sideToMove(state: GameState): [bigint, bigint] {
@@ -63,10 +63,10 @@ export function reversiReducer(state: GameState, action: GameAction): GameState 
       return { ...state, busy: true, status: "AI is thinking…" };
 
     case "SPRINT_STARTED":
-      return { ...state, busy: true, gameOver: false, lastMove: -1, status: "生成中。。。" };
+      return { ...state, busy: true, gameOver: false, lastMove: -1, status: "Generating…" };
 
     case "SPRINT_FAILED":
-      return { ...state, busy: false, status: "生成に失敗しました。もう一度お試しください。" };
+      return { ...state, busy: false, status: "Generation failed. Please try again." };
 
     case "SPRINT_SUCCEEDED":
       return {
@@ -78,7 +78,8 @@ export function reversiReducer(state: GameState, action: GameAction): GameState 
         busy: false,
         gameOver: false,
         lastMove: -1,
-        status: `あなたの手番です（最善で必勝・+${action.margin}石）`,
+        legalMoves: action.legalMoves,
+        status: `YOUR TURN (MAKE OPTIMAL MOVES)`,
       };
 
     default:

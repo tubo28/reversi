@@ -19,7 +19,7 @@ describe("Controls", () => {
     const onNewSprint = vi.fn();
     render(<Controls disabled={false} onNewGame={() => {}} onNewSprint={onNewSprint} />);
     await user.selectOptions(screen.getByLabelText("Sprint difficulty"), "16");
-    await user.click(screen.getByRole("button", { name: "必勝局面を生成" }));
+    await user.click(screen.getByRole("button", { name: "Generate Winning Position" }));
     expect(onNewSprint).toHaveBeenCalledWith(16);
   });
 
@@ -27,7 +27,7 @@ describe("Controls", () => {
     const user = userEvent.setup();
     const onNewSprint = vi.fn();
     render(<Controls disabled={false} onNewGame={() => {}} onNewSprint={onNewSprint} />);
-    await user.click(screen.getByRole("button", { name: "必勝局面を生成" }));
+    await user.click(screen.getByRole("button", { name: "Generate Winning Position" }));
     expect(onNewSprint).toHaveBeenCalledWith(14);
   });
 
@@ -35,6 +35,6 @@ describe("Controls", () => {
     render(<Controls disabled onNewGame={() => {}} onNewSprint={() => {}} />);
     expect(screen.getByRole("button", { name: "New Game (Black)" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "New Game (White)" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "必勝局面を生成" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Generate Winning Position" })).toBeDisabled();
   });
 });

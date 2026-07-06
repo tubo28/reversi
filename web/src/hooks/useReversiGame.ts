@@ -117,7 +117,17 @@ export function useReversiGame(providedApi?: ReversiApi): UseReversiGame {
         applyAction({ type: "SPRINT_FAILED" });
         return;
       }
-      applyAction({ type: "SPRINT_SUCCEEDED", black: result.black, white: result.white, margin: result.margin });
+      // Sprint always hands the board to the human (black) to move, so compute
+      // their legal moves here — the board only wires up clickable cells for
+      // squares in legalMoves, and without it the game cannot be played.
+      const legalMoves = api.validMoves(result.black, result.white);
+      applyAction({
+        type: "SPRINT_SUCCEEDED",
+        black: result.black,
+        white: result.white,
+        margin: result.margin,
+        legalMoves,
+      });
     }, 50);
   }
 

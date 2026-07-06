@@ -32,7 +32,7 @@ export function Controls({ disabled, onNewGame, onNewSprint }: ControlsProps) {
           <option value={16}>Empties 16 (hard)</option>
         </select>
         <button type="button" disabled={disabled} onClick={() => onNewSprint(sprintEmpties)}>
-          必勝局面を生成
+          Generate Winning Position
         </button>
       </div>
     </>

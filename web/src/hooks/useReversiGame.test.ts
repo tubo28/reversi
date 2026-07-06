@@ -89,9 +89,10 @@ describe("useReversiGame", () => {
     expect(result.current.state.status).toMatch(/^Game over/);
   });
 
-  it("newSprint shows the generating status, then success with the margin", () => {
+  it("newSprint shows the generating status, then success with legal moves ready to play", () => {
     const api = fakeApi({
       generateEndgame: vi.fn(() => ({ black: bitAt(1), white: bitAt(2), margin: 4n })),
+      validMoves: vi.fn(() => bitAt(20)),
     });
     const { result } = renderHook(() => useReversiGame(api));
 
@@ -99,7 +100,7 @@ describe("useReversiGame", () => {
       result.current.newSprint(14);
     });
     expect(result.current.state.busy).toBe(true);
-    expect(result.current.state.status).toBe("生成中。。。");
+    expect(result.current.state.status).toBe("Generating…");
 
     act(() => {
       vi.advanceTimersByTime(50);
@@ -107,7 +108,10 @@ describe("useReversiGame", () => {
     expect(result.current.state.busy).toBe(false);
     expect(result.current.state.black).toBe(bitAt(1));
     expect(result.current.state.white).toBe(bitAt(2));
-    expect(result.current.state.status).toBe("あなたの手番です（最善で必勝・+4石）");
+    // The human (black) must have their legal moves populated so the board is
+    // playable; otherwise no cell is clickable and the game cannot progress.
+    expect(result.current.state.legalMoves).toBe(bitAt(20));
+    expect(result.current.state.status).toBe("YOUR TURN (MAKE OPTIMAL MOVES)");
   });
 
   it("newSprint shows the failure message when generation fails", () => {
@@ -121,6 +125,6 @@ describe("useReversiGame", () => {
       vi.advanceTimersByTime(50);
     });
     expect(result.current.state.busy).toBe(false);
-    expect(result.current.state.status).toBe("生成に失敗しました。もう一度お試しください。");
+    expect(result.current.state.status).toBe("Generation failed. Please try again.");
   });
 });
