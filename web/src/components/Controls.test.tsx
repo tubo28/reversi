@@ -7,7 +7,13 @@ describe("Controls", () => {
   it("calls onNewGame with the chosen color", async () => {
     const user = userEvent.setup();
     const onNewGame = vi.fn();
-    render(<Controls disabled={false} onNewGame={onNewGame} onNewSprint={() => {}} />);
+    render(
+      <Controls
+        disabled={false}
+        onNewGame={onNewGame}
+        onNewSprint={() => {}}
+      />,
+    );
     await user.click(screen.getByRole("button", { name: "Black" }));
     expect(onNewGame).toHaveBeenCalledWith("black");
     await user.click(screen.getByRole("button", { name: "White" }));
@@ -17,7 +23,13 @@ describe("Controls", () => {
   it("calls onNewSprint when clicking Sprint", async () => {
     const user = userEvent.setup();
     const onNewSprint = vi.fn();
-    render(<Controls disabled={false} onNewGame={() => {}} onNewSprint={onNewSprint} />);
+    render(
+      <Controls
+        disabled={false}
+        onNewGame={() => {}}
+        onNewSprint={onNewSprint}
+      />,
+    );
     await user.click(screen.getByRole("button", { name: "Sprint" }));
     expect(onNewSprint).toHaveBeenCalledWith(14);
   });

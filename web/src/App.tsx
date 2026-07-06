@@ -12,13 +12,18 @@ export interface AppProps {
 }
 
 export function App({ api }: AppProps = {}) {
-  const { state, loadError, onHumanMove, newGame, newSprint } = useReversiGame(api);
-  const interactive = !state.gameOver && !state.busy && state.turn === state.humanColor;
+  const { state, loadError, onHumanMove, newGame, newSprint } =
+    useReversiGame(api);
+  const interactive =
+    !state.gameOver && !state.busy && state.turn === state.humanColor;
 
   return (
     <main className="app">
       <Controls disabled={false} onNewGame={newGame} onNewSprint={newSprint} />
-      <ScoreBoard blackCount={popcount(state.black)} whiteCount={popcount(state.white)} />
+      <ScoreBoard
+        blackCount={popcount(state.black)}
+        whiteCount={popcount(state.white)}
+      />
       <Board
         black={state.black}
         white={state.white}

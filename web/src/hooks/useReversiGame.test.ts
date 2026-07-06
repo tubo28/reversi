@@ -91,7 +91,11 @@ describe("useReversiGame", () => {
 
   it("newSprint shows the generating status, then success with legal moves ready to play", () => {
     const api = fakeApi({
-      generateEndgame: vi.fn(() => ({ black: bitAt(1), white: bitAt(2), margin: 4n })),
+      generateEndgame: vi.fn(() => ({
+        black: bitAt(1),
+        white: bitAt(2),
+        margin: 4n,
+      })),
       validMoves: vi.fn(() => bitAt(20)),
     });
     const { result } = renderHook(() => useReversiGame(api));
@@ -127,6 +131,8 @@ describe("useReversiGame", () => {
       vi.advanceTimersByTime(50);
     });
     expect(result.current.state.busy).toBe(false);
-    expect(result.current.state.status).toBe("Generation failed. Please try again.");
+    expect(result.current.state.status).toBe(
+      "Generation failed. Please try again.",
+    );
   });
 });

@@ -54,9 +54,12 @@ export async function loadReversiWasm(): Promise<ReversiApi> {
 
 async function loadRawWasm(): Promise<ReversiWasm> {
   try {
-    const res = await WebAssembly.instantiateStreaming(fetch("reversi.wasm"), {});
+    const res = await WebAssembly.instantiateStreaming(
+      fetch("reversi.wasm"),
+      {},
+    );
     return res.instance.exports as unknown as ReversiWasm;
-  } catch (_) {
+  } catch {
     // Fallback for servers that don't send application/wasm.
     const buf = await (await fetch("reversi.wasm")).arrayBuffer();
     const res = await WebAssembly.instantiate(buf, {});

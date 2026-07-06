@@ -9,12 +9,20 @@ export interface BoardProps {
   onCellClick: (index: number) => void;
 }
 
-export function Board({ black, white, legalMoves, lastMove, interactive, onCellClick }: BoardProps) {
+export function Board({
+  black,
+  white,
+  legalMoves,
+  lastMove,
+  interactive,
+  onCellClick,
+}: BoardProps) {
   const cells = [];
   for (let index = 0; index < 64; index++) {
     const hasBlack = isSet(black, index);
     const hasWhite = isSet(white, index);
-    const playable = interactive && !hasBlack && !hasWhite && isSet(legalMoves, index);
+    const playable =
+      interactive && !hasBlack && !hasWhite && isSet(legalMoves, index);
 
     cells.push(
       <button

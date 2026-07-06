@@ -18,7 +18,10 @@ export interface UseReversiGame {
 // is thinking" message for 350ms before the AI actually moves, and sprint
 // generation for 50ms before the blocking wasm call).
 export function useReversiGame(providedApi?: ReversiApi): UseReversiGame {
-  const [state, dispatch] = useReducer(reversiReducer, initialGameState("black"));
+  const [state, dispatch] = useReducer(
+    reversiReducer,
+    initialGameState("black"),
+  );
   // Mirrors `state`, but updated synchronously so timeout callbacks and
   // recursive step()-style calls always see the latest values without
   // waiting for a re-render (React state updates are deferred).
@@ -147,7 +150,9 @@ export function useReversiGame(providedApi?: ReversiApi): UseReversiGame {
       .catch((e) => {
         if (cancelled) return;
         console.error(e);
-        setLoadError("Failed to load WASM. Please open this page via an HTTP server.");
+        setLoadError(
+          "Failed to load WASM. Please open this page via an HTTP server.",
+        );
       });
     return () => {
       cancelled = true;

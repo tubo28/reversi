@@ -13,13 +13,25 @@ export function Controls({ disabled, onNewGame, onNewSprint }: ControlsProps) {
     <div className="controls">
       <h2 className="controls-title">New Game</h2>
       <div className="controls-buttons">
-        <button type="button" disabled={disabled} onClick={() => onNewGame("black")}>
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => onNewGame("black")}
+        >
           Black
         </button>
-        <button type="button" disabled={disabled} onClick={() => onNewGame("white")}>
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => onNewGame("white")}
+        >
           White
         </button>
-        <button type="button" disabled={disabled} onClick={() => onNewSprint(SPRINT_EMPTIES)}>
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => onNewSprint(SPRINT_EMPTIES)}
+        >
           Sprint
         </button>
       </div>

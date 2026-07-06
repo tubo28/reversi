@@ -23,15 +23,21 @@ describe("wrapWasm", () => {
   });
 
   it("masks flipMask and aiMove results the same way", () => {
-    const wasm = fakeWasm({ flip_mask: vi.fn(() => -8n), ai_move: vi.fn(() => -2n) });
+    const wasm = fakeWasm({
+      flip_mask: vi.fn(() => -8n),
+      ai_move: vi.fn(() => -2n),
+    });
     const api = wrapWasm(wasm);
-    expect(api.flipMask(0n, 0n, 0n)).toBe(((1n << 64n) - 1n) - 7n);
-    expect(api.aiMove(0n, 0n, 0)).toBe(((1n << 64n) - 1n) - 1n);
+    expect(api.flipMask(0n, 0n, 0n)).toBe((1n << 64n) - 1n - 7n);
+    expect(api.aiMove(0n, 0n, 0)).toBe((1n << 64n) - 1n - 1n);
   });
 
   it("returns null from generateEndgame without reading the getters when generation fails", () => {
     const generatedBlack = vi.fn(() => 1n);
-    const wasm = fakeWasm({ generate_endgame: vi.fn(() => 0n), generated_black: generatedBlack });
+    const wasm = fakeWasm({
+      generate_endgame: vi.fn(() => 0n),
+      generated_black: generatedBlack,
+    });
     const api = wrapWasm(wasm);
     expect(api.generateEndgame(1, 14)).toBeNull();
     expect(generatedBlack).not.toHaveBeenCalled();
@@ -45,6 +51,10 @@ describe("wrapWasm", () => {
       generated_margin: vi.fn(() => 3n),
     });
     const api = wrapWasm(wasm);
-    expect(api.generateEndgame(1, 14)).toEqual({ black: 5n, white: 9n, margin: 3n });
+    expect(api.generateEndgame(1, 14)).toEqual({
+      black: 5n,
+      white: 9n,
+      margin: 3n,
+    });
   });
 });

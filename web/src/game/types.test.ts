@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { isSet } from "./bits";
-import { START_BLACK, START_WHITE, initialGameState, label, other } from "./types";
+import {
+  START_BLACK,
+  START_WHITE,
+  initialGameState,
+  label,
+  other,
+} from "./types";
 
 describe("other", () => {
   it("flips black to white and back", () => {
