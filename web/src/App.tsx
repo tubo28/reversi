@@ -3,6 +3,7 @@ import { Board } from "./components/Board";
 import { Controls } from "./components/Controls";
 import { ScoreBoard } from "./components/ScoreBoard";
 import { StatusLine } from "./components/StatusLine";
+import { UndoButton } from "./components/UndoButton";
 import { useReversiGame } from "./hooks/useReversiGame";
 import type { ReversiApi } from "./wasm/reversiWasm";
 
@@ -12,7 +13,7 @@ export interface AppProps {
 }
 
 export function App({ api }: AppProps = {}) {
-  const { state, loadError, onHumanMove, newGame, newSprint } =
+  const { state, loadError, canUndo, onHumanMove, newGame, newSprint, undo } =
     useReversiGame(api);
   const interactive =
     !state.gameOver && !state.busy && state.turn === state.humanColor;
@@ -32,6 +33,7 @@ export function App({ api }: AppProps = {}) {
         interactive={interactive}
         onCellClick={onHumanMove}
       />
+      {state.sprint && <UndoButton disabled={!canUndo} onUndo={undo} />}
       <StatusLine text={loadError ?? state.status} />
     </main>
   );

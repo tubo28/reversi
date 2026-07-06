@@ -4,6 +4,7 @@ import {
   label,
   other,
   type GameState,
+  type Snapshot,
   type Turn,
   type Winner,
 } from "./types";
@@ -16,6 +17,7 @@ export type GameAction =
   | { type: "FINISH" }
   | { type: "SHOW_YOUR_TURN"; legalMoves: bigint }
   | { type: "START_AI_THINKING" }
+  | { type: "UNDO" }
   | { type: "SPRINT_STARTED" }
   | { type: "SPRINT_FAILED" }
   | {
@@ -31,6 +33,18 @@ export function sideToMove(state: GameState): [bigint, bigint] {
   return state.turn === "black"
     ? [state.black, state.white]
     : [state.white, state.black];
+}
+
+// The board fields worth restoring on undo.
+function snapshot(state: GameState): Snapshot {
+  return {
+    black: state.black,
+    white: state.white,
+    turn: state.turn,
+    lastMove: state.lastMove,
+    legalMoves: state.legalMoves,
+    status: state.status,
+  };
 }
 
 export function reversiReducer(
@@ -54,6 +68,9 @@ export function reversiReducer(
         white,
         lastMove: action.index,
         turn: other(state.turn),
+        // Remember where the human moved from, so an undo can rewind this move
+        // (and the AI reply that follows) back to this decision point.
+        history: [...state.history, snapshot(state)],
       };
     }
 
@@ -109,6 +126,24 @@ export function reversiReducer(
         legalMoves: action.legalMoves,
       };
 
+    case "UNDO": {
+      if (state.history.length === 0) return state;
+      const prev = state.history[state.history.length - 1];
+      return {
+        ...state,
+        black: prev.black,
+        white: prev.white,
+        turn: prev.turn,
+        lastMove: prev.lastMove,
+        legalMoves: prev.legalMoves,
+        status: prev.status,
+        gameOver: false,
+        winner: null,
+        busy: false,
+        history: state.history.slice(0, -1),
+      };
+    }
+
     case "START_AI_THINKING":
       return { ...state, busy: true, status: "AI is thinking…" };
 
@@ -141,6 +176,8 @@ export function reversiReducer(
         winner: null,
         lastMove: -1,
         legalMoves: action.legalMoves,
+        sprint: true,
+        history: [],
         status: `Your turn (${label("black")})\nTHIS IS A WINNING POSITION. MAKE OPTIMAL MOVES TO WIN.`,
       };
 

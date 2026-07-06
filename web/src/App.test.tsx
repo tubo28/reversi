@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "./App";
+import { bitAt } from "./game/bits";
 import type { ReversiApi } from "./wasm/reversiWasm";
 
 function fakeApi(overrides: Partial<ReversiApi> = {}): ReversiApi {
@@ -41,5 +42,35 @@ describe("App", () => {
       vi.advanceTimersByTime(350);
     });
     expect(screen.getByText("Your turn (White)")).toBeInTheDocument();
+  });
+
+  it("hides the Undo button during a normal game", () => {
+    render(<App api={fakeApi()} />);
+    expect(
+      screen.queryByRole("button", { name: "Undo" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows the Undo button once a sprint is running", () => {
+    const api = fakeApi({
+      generateEndgame: vi.fn(() => ({
+        black: bitAt(1),
+        white: bitAt(2),
+        margin: 4n,
+      })),
+      validMoves: vi.fn(() => bitAt(20)),
+    });
+    render(<App api={api} />);
+
+    // No sprint yet -> no Undo button.
+    expect(
+      screen.queryByRole("button", { name: "Undo" }),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Sprint" }));
+    act(() => {
+      vi.advanceTimersByTime(50);
+    });
+    expect(screen.getByRole("button", { name: "Undo" })).toBeInTheDocument();
   });
 });

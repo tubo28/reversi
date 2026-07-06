@@ -120,6 +120,53 @@ describe("useReversiGame", () => {
     );
   });
 
+  it("tracks undo: enabled after a move, restores the prior board", () => {
+    const api = fakeApi();
+    const { result } = renderHook(() => useReversiGame(api));
+
+    expect(result.current.canUndo).toBe(false);
+    const before = {
+      black: result.current.state.black,
+      white: result.current.state.white,
+      turn: result.current.state.turn,
+    };
+
+    act(() => {
+      result.current.onHumanMove(20);
+    });
+    act(() => {
+      vi.advanceTimersByTime(350);
+    });
+    // Back to the human's turn after the AI reply.
+    expect(result.current.state.turn).toBe("black");
+    expect(result.current.canUndo).toBe(true);
+    expect(result.current.state.black).not.toBe(before.black);
+
+    act(() => {
+      result.current.undo();
+    });
+    expect(result.current.canUndo).toBe(false);
+    expect(result.current.state.black).toBe(before.black);
+    expect(result.current.state.white).toBe(before.white);
+    expect(result.current.state.turn).toBe(before.turn);
+  });
+
+  it("undo is a no-op while the AI is thinking (busy)", () => {
+    const api = fakeApi();
+    const { result } = renderHook(() => useReversiGame(api));
+
+    act(() => {
+      result.current.onHumanMove(20);
+    });
+    // Now white's turn, AI thinking (busy) — undo must not fire.
+    expect(result.current.state.busy).toBe(true);
+    const during = result.current.state;
+    act(() => {
+      result.current.undo();
+    });
+    expect(result.current.state).toEqual(during);
+  });
+
   it("newSprint shows the failure message when generation fails", () => {
     const api = fakeApi({ generateEndgame: vi.fn(() => null) });
     const { result } = renderHook(() => useReversiGame(api));

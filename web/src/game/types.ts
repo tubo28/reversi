@@ -16,6 +16,17 @@ export function label(turn: Turn): string {
   return turn === "black" ? "Black" : "White";
 }
 
+// Minimal board state captured at each of the human's decision points, so an
+// undo can restore it without replaying the (non-deterministic) AI moves.
+export interface Snapshot {
+  black: bigint;
+  white: bigint;
+  turn: Turn;
+  lastMove: number;
+  legalMoves: bigint;
+  status: string;
+}
+
 export interface GameState {
   black: bigint;
   white: bigint;
@@ -30,6 +41,12 @@ export interface GameState {
   // Legal moves for the human, as of the last time it became their turn.
   // Only meaningful while it's actually the human's interactive turn.
   legalMoves: bigint;
+  // True while playing a generated sprint (winning-endgame) position. Only the
+  // undo button's visibility is gated on this; history is tracked either way.
+  sprint: boolean;
+  // Board snapshots taken right before each human move, newest last. An undo
+  // pops the last one and restores it (rewinding the human move + AI reply).
+  history: Snapshot[];
 }
 
 export function initialGameState(humanColor: Turn): GameState {
@@ -44,5 +61,7 @@ export function initialGameState(humanColor: Turn): GameState {
     lastMove: -1,
     status: "",
     legalMoves: 0n,
+    sprint: false,
+    history: [],
   };
 }

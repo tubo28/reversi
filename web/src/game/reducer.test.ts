@@ -64,6 +64,31 @@ describe("APPLY_HUMAN_MOVE", () => {
     expect(next.turn).toBe("white");
     expect(next.lastMove).toBe(20);
   });
+
+  it("pushes the pre-move board onto history (for undo)", () => {
+    const state: GameState = {
+      ...initialGameState("black"),
+      turn: "black",
+      legalMoves: bitAt(20),
+      status: "Your turn (Black)",
+      lastMove: 42,
+    };
+    const next = dispatch(state, {
+      type: "APPLY_HUMAN_MOVE",
+      index: 20,
+      flip: bitAt(27),
+    });
+    expect(next.history).toEqual([
+      {
+        black: state.black,
+        white: state.white,
+        turn: "black",
+        lastMove: 42,
+        legalMoves: bitAt(20),
+        status: "Your turn (Black)",
+      },
+    ]);
+  });
 });
 
 describe("APPLY_AI_MOVE", () => {
@@ -229,5 +254,83 @@ describe("sprint actions", () => {
     expect(next.status).toBe(
       "Your turn (Black)\nTHIS IS A WINNING POSITION. MAKE OPTIMAL MOVES TO WIN.",
     );
+  });
+
+  it("SPRINT_SUCCEEDED marks the sprint flag and resets history", () => {
+    const state: GameState = {
+      ...initialGameState("black"),
+      history: [
+        {
+          black: 1n,
+          white: 2n,
+          turn: "black",
+          lastMove: 3,
+          legalMoves: 4n,
+          status: "old",
+        },
+      ],
+    };
+    const next = dispatch(state, {
+      type: "SPRINT_SUCCEEDED",
+      black: bitAt(10),
+      white: bitAt(12),
+      margin: 6n,
+      legalMoves: bitAt(20),
+    });
+    expect(next.sprint).toBe(true);
+    expect(next.history).toEqual([]);
+  });
+});
+
+describe("UNDO", () => {
+  const snap = {
+    black: bitAt(10) | bitAt(11),
+    white: bitAt(12),
+    turn: "black" as const,
+    lastMove: 11,
+    legalMoves: bitAt(20),
+    status: "Your turn (Black)",
+  };
+
+  it("restores the last snapshot and pops it off history", () => {
+    const state: GameState = {
+      ...initialGameState("black"),
+      black: bitAt(0),
+      white: bitAt(1),
+      turn: "white",
+      lastMove: 0,
+      legalMoves: 0n,
+      status: "AI is thinking…",
+      busy: true,
+      history: [snap],
+    };
+    const next = dispatch(state, { type: "UNDO" });
+    expect(next.black).toBe(snap.black);
+    expect(next.white).toBe(snap.white);
+    expect(next.turn).toBe("black");
+    expect(next.lastMove).toBe(11);
+    expect(next.legalMoves).toBe(bitAt(20));
+    expect(next.status).toBe("Your turn (Black)");
+    expect(next.busy).toBe(false);
+    expect(next.history).toEqual([]);
+  });
+
+  it("is a no-op when history is empty", () => {
+    const state = initialGameState("black");
+    expect(dispatch(state, { type: "UNDO" })).toEqual(state);
+  });
+
+  it("recovers from a finished game, clearing gameOver/winner", () => {
+    const state: GameState = {
+      ...initialGameState("black"),
+      gameOver: true,
+      winner: "white",
+      history: [snap],
+    };
+    const next = dispatch(state, { type: "UNDO" });
+    expect(next.gameOver).toBe(false);
+    expect(next.winner).toBeNull();
+    expect(next.black).toBe(snap.black);
+    expect(next.history).toEqual([]);
   });
 });

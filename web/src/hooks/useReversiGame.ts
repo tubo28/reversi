@@ -7,9 +7,11 @@ import { loadReversiWasm, type ReversiApi } from "../wasm/reversiWasm";
 export interface UseReversiGame {
   state: GameState;
   loadError: string | null;
+  canUndo: boolean;
   onHumanMove(index: number): void;
   newGame(color: Turn): void;
   newSprint(targetEmpties: number): void;
+  undo(): void;
 }
 
 // Orchestrates the pure reducer against the wasm engine: computes wasm calls,
@@ -108,6 +110,16 @@ export function useReversiGame(providedApi?: ReversiApi): UseReversiGame {
     runStep();
   }
 
+  // Rewind to the human's previous decision point, undoing their last move and
+  // the AI reply that followed. Pure reducer state restore — no wasm needed, so
+  // there's nothing to re-drive afterwards.
+  function undo(): void {
+    const s = stateRef.current;
+    if (s.busy || s.history.length === 0) return;
+    clearPending();
+    applyAction({ type: "UNDO" });
+  }
+
   function newSprint(targetEmpties: number): void {
     clearPending();
     applyAction({ type: "SPRINT_STARTED" });
@@ -168,5 +180,13 @@ export function useReversiGame(providedApi?: ReversiApi): UseReversiGame {
     };
   }, []);
 
-  return { state, loadError, onHumanMove, newGame, newSprint };
+  return {
+    state,
+    loadError,
+    canUndo: state.history.length > 0,
+    onHumanMove,
+    newGame,
+    newSprint,
+    undo,
+  };
 }

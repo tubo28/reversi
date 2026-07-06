@@ -168,6 +168,32 @@ body {
   height: 22px;
 }
 
+.undo-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.undo {
+  font-size: 1rem;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #4caf50;
+  background: #1b3a2a;
+  color: #fff;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.undo:hover:not(:disabled) {
+  background: #24503a;
+}
+
+.undo:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
 .status {
   margin-top: 20px;
   min-height: 1.4em;
