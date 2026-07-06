@@ -29,14 +29,27 @@ body {
 
 .controls {
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.controls-title {
+  margin: 0;
+  font-size: 1rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.controls-buttons {
+  display: flex;
   gap: 12px;
   justify-content: center;
   align-items: center;
   flex-wrap: wrap;
-  margin-bottom: 16px;
 }
 
-.controls select,
 .controls button {
   font-size: 1rem;
   padding: 6px 12px;
@@ -154,4 +167,5 @@ body {
   margin-top: 20px;
   min-height: 1.4em;
   font-size: 1.05rem;
+  white-space: pre-line;
 }

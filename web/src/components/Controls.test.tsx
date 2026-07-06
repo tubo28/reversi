@@ -8,33 +8,24 @@ describe("Controls", () => {
     const user = userEvent.setup();
     const onNewGame = vi.fn();
     render(<Controls disabled={false} onNewGame={onNewGame} onNewSprint={() => {}} />);
-    await user.click(screen.getByRole("button", { name: "New Game (Black)" }));
+    await user.click(screen.getByRole("button", { name: "Black" }));
     expect(onNewGame).toHaveBeenCalledWith("black");
-    await user.click(screen.getByRole("button", { name: "New Game (White)" }));
+    await user.click(screen.getByRole("button", { name: "White" }));
     expect(onNewGame).toHaveBeenCalledWith("white");
   });
 
-  it("calls onNewSprint with the selected empties option", async () => {
+  it("calls onNewSprint when clicking Sprint", async () => {
     const user = userEvent.setup();
     const onNewSprint = vi.fn();
     render(<Controls disabled={false} onNewGame={() => {}} onNewSprint={onNewSprint} />);
-    await user.selectOptions(screen.getByLabelText("Sprint difficulty"), "16");
-    await user.click(screen.getByRole("button", { name: "Generate Winning Position" }));
-    expect(onNewSprint).toHaveBeenCalledWith(16);
-  });
-
-  it("defaults the sprint difficulty to 14 empties", async () => {
-    const user = userEvent.setup();
-    const onNewSprint = vi.fn();
-    render(<Controls disabled={false} onNewGame={() => {}} onNewSprint={onNewSprint} />);
-    await user.click(screen.getByRole("button", { name: "Generate Winning Position" }));
+    await user.click(screen.getByRole("button", { name: "Sprint" }));
     expect(onNewSprint).toHaveBeenCalledWith(14);
   });
 
   it("disables all buttons when disabled", () => {
     render(<Controls disabled onNewGame={() => {}} onNewSprint={() => {}} />);
-    expect(screen.getByRole("button", { name: "New Game (Black)" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "New Game (White)" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Generate Winning Position" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Black" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "White" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Sprint" })).toBeDisabled();
   });
 });

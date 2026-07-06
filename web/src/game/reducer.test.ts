@@ -164,6 +164,8 @@ describe("sprint actions", () => {
     expect(next.gameOver).toBe(false);
     expect(next.lastMove).toBe(-1);
     expect(next.legalMoves).toBe(bitAt(20) | bitAt(21));
-    expect(next.status).toBe("YOUR TURN (MAKE OPTIMAL MOVES)");
+    expect(next.status).toBe(
+      "Your turn (Black)\nTHIS IS A WINNING POSITION. MAKE OPTIMAL MOVES TO WIN.",
+    );
   });
 });

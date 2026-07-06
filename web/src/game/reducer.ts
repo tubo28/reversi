@@ -79,7 +79,7 @@ export function reversiReducer(state: GameState, action: GameAction): GameState 
         gameOver: false,
         lastMove: -1,
         legalMoves: action.legalMoves,
-        status: `YOUR TURN (MAKE OPTIMAL MOVES)`,
+        status: `Your turn (${label("black")})\nTHIS IS A WINNING POSITION. MAKE OPTIMAL MOVES TO WIN.`,
       };
 
     default:

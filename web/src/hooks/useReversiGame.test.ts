@@ -111,7 +111,9 @@ describe("useReversiGame", () => {
     // The human (black) must have their legal moves populated so the board is
     // playable; otherwise no cell is clickable and the game cannot progress.
     expect(result.current.state.legalMoves).toBe(bitAt(20));
-    expect(result.current.state.status).toBe("YOUR TURN (MAKE OPTIMAL MOVES)");
+    expect(result.current.state.status).toBe(
+      "Your turn (Black)\nTHIS IS A WINNING POSITION. MAKE OPTIMAL MOVES TO WIN.",
+    );
   });
 
   it("newSprint shows the failure message when generation fails", () => {

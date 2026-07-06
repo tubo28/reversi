@@ -33,7 +33,7 @@ describe("App", () => {
   it("plays a full human->AI round trip after starting a new game as White", () => {
     render(<App api={fakeApi()} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "New Game (White)" }));
+    fireEvent.click(screen.getByRole("button", { name: "White" }));
     // Black moves first (it's black's turn but the human chose White), so the AI goes first.
     expect(screen.getByText("AI is thinking…")).toBeInTheDocument();
 
