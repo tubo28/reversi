@@ -17,8 +17,8 @@ use reversi::reversi::player::alphabeta3::{AlphaBeta3Player, PhaseWeights, Weigh
 // Games per colour per candidate (played as both black and white).
 const GAMES: u32 = 12;
 
-fn w(pos: i32, mob: i32, front: i32, stab: i32, disc: i32) -> Weights {
-    Weights { pos, mob, front, stab, disc }
+fn w(pos: i32, mob: i32, front: i32, stab: i32, disk: i32) -> Weights {
+    Weights { pos, mob, front, stab, disk }
 }
 
 // The candidate weightings to try. First is the current default (control).

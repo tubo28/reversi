@@ -8,7 +8,7 @@
 use std::hint::black_box;
 use std::time::{Duration, Instant};
 
-use reversi::reversi::bitboard::{flip_discs, legal_moves, Board, Mask};
+use reversi::reversi::bitboard::{flip_disks, legal_moves, Board, Mask};
 use reversi::reversi::rand::Xor128;
 
 /// A position plus its legal moves, collected from random self-play.
@@ -134,7 +134,7 @@ fn main() {
         let mut m = c.moves;
         while m != 0 {
             let mov = m & m.wrapping_neg();
-            assert_eq!(flip_discs(c.board.0, c.board.1, mov), flip_ref(c.board.0, c.board.1, mov));
+            assert_eq!(flip_disks(c.board.0, c.board.1, mov), flip_ref(c.board.0, c.board.1, mov));
             m &= m - 1;
         }
     }
@@ -159,7 +159,7 @@ fn main() {
     for _ in 0..ITERS {
         for c in cases.iter() {
             let mov = c.moves & c.moves.wrapping_neg();
-            acc ^= flip_discs(black_box(c.board.0), black_box(c.board.1), black_box(mov));
+            acc ^= flip_disks(black_box(c.board.0), black_box(c.board.1), black_box(mov));
         }
     }
     black_box(acc);

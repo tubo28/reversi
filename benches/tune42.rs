@@ -88,8 +88,8 @@ fn candidates() -> Vec<(&'static str, PhaseWeights)> {
         (
             "disc-earlier",
             tweak(base, |w| {
-                w.midgame.disc = 6;
-                w.endgame.disc = 24;
+                w.midgame.disk = 6;
+                w.endgame.disk = 24;
             }),
         ),
     ]
